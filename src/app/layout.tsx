@@ -5,6 +5,7 @@ import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { SiteMotion } from '@/components/SiteMotion';
+import { WhatsAppButton } from '@/components/WhatsAppButton';
 
 import { cacheTag } from 'next/cache';
 import { dataStore } from '@/backend/repositories/data-store';
@@ -74,6 +75,7 @@ ${themeTokensCss}
         <Suspense fallback={null}>
           <ScrollToTop />
           <SiteMotion />
+          <WhatsAppButton />
         </Suspense>
         <ThemeProvider initialActiveTheme={activeTheme} initialThemes={themes}>
           {children}

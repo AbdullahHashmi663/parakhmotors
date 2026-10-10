@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { dataStore } from '@/backend/repositories/data-store';
 import { requireAdmin } from '@/backend/auth';
 import { ApiError, handleApiError } from '@/backend/utils/api-error';
@@ -21,6 +22,7 @@ export async function POST(request: NextRequest) {
     if (body.action === 'set_active') {
       const updated = await dataStore.setActiveTheme(resourceId(textField(body, 'themeId', { max: 120 })));
       if (!updated) throw ApiError.notFound('Theme not found');
+      try { revalidateTag('themes', { expire: 0 }); revalidatePath('/', 'layout'); } catch {}
       return successResponse(updated, { message: 'Active theme updated successfully' });
     }
     if (body.action === 'save_theme') {
@@ -34,7 +36,9 @@ export async function POST(request: NextRequest) {
         if (!/^(?:#[\da-f]{3,8}|(?:rgb|hsl)a?\([\d\s.,%+-]+\)|[a-z]{1,20})$/i.test(value)) throw ApiError.badRequest(key + ' must be a valid CSS color');
         theme[key] = value;
       }
-      return successResponse(await dataStore.saveTheme(theme), { message: 'Theme saved successfully' });
+      const saved = await dataStore.saveTheme(theme);
+      try { revalidateTag('themes', { expire: 0 }); revalidatePath('/', 'layout'); } catch {}
+      return successResponse(saved, { message: 'Theme saved successfully' });
     }
     throw ApiError.badRequest('Unknown action parameter');
   } catch (error) { return handleApiError(error); }
@@ -48,6 +52,7 @@ export async function DELETE(request: NextRequest) {
     if (!themes.some(theme => theme.id === id)) throw ApiError.notFound('Theme not found');
     if (themes.length <= 1) throw ApiError.conflict('Keep at least one theme available');
     if (!(await dataStore.deleteTheme(id))) throw ApiError.notFound('Theme not found');
+    try { revalidateTag('themes', { expire: 0 }); revalidatePath('/', 'layout'); } catch {}
     return successResponse({ deletedId: id }, { message: 'Theme deleted successfully' });
   } catch (error) { return handleApiError(error); }
 }

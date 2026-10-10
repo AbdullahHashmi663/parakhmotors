@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { dataStore } from '@/backend/repositories/data-store';
 import { requireAdmin } from '@/backend/auth';
 import { ApiError, handleApiError } from '@/backend/utils/api-error';
@@ -26,6 +27,8 @@ export async function PUT(request: NextRequest) {
     if (updates.phone && !isValidPhone(updates.phone)) throw ApiError.badRequest('Invalid dealership phone number');
     if (updates.whatsapp && !isValidPhone(updates.whatsapp)) throw ApiError.badRequest('Invalid WhatsApp phone number');
     if (updates.currency && updates.currency !== 'PKR') throw ApiError.badRequest('Dealership prices are recorded in PKR');
-    return successResponse(await dataStore.updateSettings(updates), { message: 'Dealership settings updated successfully' });
+    const updated = await dataStore.updateSettings(updates);
+    try { revalidateTag('themes', { expire: 0 }); revalidatePath('/', 'layout'); } catch {}
+    return successResponse(updated, { message: 'Dealership settings updated successfully' });
   } catch (error) { return handleApiError(error); }
 }

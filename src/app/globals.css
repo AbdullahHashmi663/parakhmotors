@@ -35,11 +35,15 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 130px;
-  overflow-x: clip;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 body {
   margin: 0;
-  overflow-x: clip;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  overflow-x: hidden;
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
   color: var(--pm-ink);

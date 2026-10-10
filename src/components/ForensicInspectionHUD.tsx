@@ -71,10 +71,10 @@ export function ForensicInspectionHUD() {
   const [activeCheckpoint, setActiveCheckpoint] = useState<Checkpoint>(checkpoints[0]);
 
   return (
-    <div className="relative rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-6 md:p-10 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-md">
+    <div className="relative rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-6 md:p-10 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-md transform-gpu">
       {/* Ambient decorative lighting */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--primary)]/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[var(--glow-color)] rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--primary)]/10 rounded-full blur-[100px] pointer-events-none transform-gpu" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[var(--glow-color)] rounded-full blur-[100px] pointer-events-none transform-gpu" />
 
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 relative z-10 border-b border-[var(--border-color)] pb-6">

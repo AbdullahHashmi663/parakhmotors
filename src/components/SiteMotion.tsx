@@ -46,7 +46,7 @@ export function SiteMotion() {
             trigger: element,
             start: 'clamp(top 91%)',
             once: true,
-            fastScrollEnd: true,
+            fastScrollEnd: !isMobile,
             toggleActions: 'play none none none',
           };
 
@@ -183,7 +183,7 @@ export function SiteMotion() {
       const progressContext = gsap.context(() => {
         if (progress.current) gsap.fromTo(progress.current, { scaleX: 0 }, {
           scaleX: 1, ease: 'none',
-          scrollTrigger: { start: 0, end: 'max', scrub: 0.2 },
+          scrollTrigger: { start: 0, end: 'max', scrub: isMobile ? true : 0.2 },
         });
       });
       discover();

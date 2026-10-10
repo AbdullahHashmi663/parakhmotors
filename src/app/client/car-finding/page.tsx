@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Search, ShieldCheck } from 'lucide-react';
-import { CustomerPage, CustomerHero, CustomerSectionTitle, CustomerChecklist, CustomerSteps, CustomerFAQ, customerStyles as s } from '@/components/CustomerPages';
+import { CustomerPage, CustomerHero, CustomerSectionTitle, CustomerChecklist, CustomerSteps, CustomerFAQ, CustomerCTA, customerStyles as s } from '@/components/CustomerPages';
 import { CustomerRequestForm } from '@/components/CustomerRequestForm';
 
 export default function CarFindingPage() {
@@ -9,6 +9,7 @@ export default function CarFindingPage() {
     <CustomerSteps title="From wish list to the right shortlist." steps={[{ title: 'Tell us what fits', description: 'Share your budget, preferred models, colours and the condition you’re looking for.' }, { title: 'We search and assess', description: 'Our team sources suitable vehicles, checks their condition and verifies the paperwork.' }, { title: 'Choose with confidence', description: 'Review your options with us. We assist with negotiation and the transaction when you choose your car.' }]} />
     <section className={s.section}><div className="container-custom"><div className={s.formLayout} id="finder-form"><aside data-motion="reveal" className={s.formAside}><p className={s.eyebrow}>Your search starts here</p><h2>Tell us about<br />your next car.</h2><p>Be as specific as you like. Model, mileage, features or a certain colour—your preferences help us focus the search.</p><CustomerChecklist items={['Minimum vehicle budget: Rs. 40 Lac', 'Sourcing fee based on your budget', 'Expected search period: 1 day to 1 month']} /><div className={s.asideNote}><ShieldCheck size={22} strokeWidth={1.5} aria-hidden="true" /><span>Our team will discuss your requirements and confirm the package before the search begins.</span></div></aside><CustomerRequestForm kind="finder" /></div></div></section>
     <CustomerFAQ items={[{ question: 'Is the sourcing fee included in my car budget?', answer: 'No. The budget you enter is for the vehicle. The separate sourcing service fee is Rs. 50,000 for budgets from Rs. 40 Lac up to Rs. 1 Crore, or Rs. 1,00,000 for budgets above Rs. 1 Crore.' }, { question: 'How long does the search take?', answer: 'The published search period is a minimum of one day and a maximum of one month. Availability depends on your chosen model, budget and condition requirements. Our team will discuss your search when confirming the request.' }, { question: 'Can I give you more than one model option?', answer: 'Yes. Enter your preferred options in the model field and use the additional requirements field to explain your priorities or alternatives.' }, { question: 'How do I share my advance payment confirmation?', answer: 'Share the bank transfer screenshot with our WhatsApp concierge, including your request reference. Confirm the package and amount with our team before transferring.' }]} />
+    <CustomerCTA title="Looking for a specific car in Pakistan?" description="Submit your requirements above or speak to our car sourcing concierge." href="#finder-form" label="Start search now" />
   </CustomerPage>;
 }
 

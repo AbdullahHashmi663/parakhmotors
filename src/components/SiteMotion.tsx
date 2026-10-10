@@ -9,7 +9,11 @@ import { animate, type AnimationParams } from 'animejs';
 gsap.registerPlugin(ScrollTrigger);
 ScrollTrigger.config({ ignoreMobileResize: true });
 
-type MotionRecord = { context: gsap.Context; entrance?: gsap.core.Tween; responsive?: gsap.MatchMedia };
+type MotionRecord = {
+  context: gsap.Context;
+  entrance?: gsap.core.Tween;
+  responsive?: gsap.MatchMedia;
+};
 
 /** Progressive enhancement: the server always renders visible, usable content. */
 export function SiteMotion() {
@@ -17,16 +21,24 @@ export function SiteMotion() {
   const progress = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Immediately reset scroll position on route change so new page elements evaluate from top: 0
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+
     const media = gsap.matchMedia();
     media.add('(prefers-reduced-motion: no-preference)', () => {
       const records = new Map<Element, MotionRecord>();
       const feedback = new Map<Element, ReturnType<typeof animate>>();
-      let refreshTimer: number = 0;
+      let refreshTimer = 0;
       let accordionTimer = 0;
       let disposed = false;
       const isMobile = window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches;
-      const readyScene = (element: Element) => element.closest('[data-motion-scene][data-motion-ready="true"]');
-      const revertRecord = (record: MotionRecord) => { record.responsive?.revert(); record.context.revert(); };
+
+      const revertRecord = (record: MotionRecord) => {
+        record.responsive?.revert();
+        record.context.revert();
+      };
 
       const refresh = () => {
         window.clearTimeout(refreshTimer);
@@ -35,176 +47,191 @@ export function SiteMotion() {
         }, 120);
       };
 
-      let mobileObserver: IntersectionObserver | null = null;
-      if (isMobile && typeof IntersectionObserver !== 'undefined') {
-        mobileObserver = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const target = entry.target as HTMLElement;
-              mobileObserver?.unobserve(target);
-              const delay = parseFloat(target.dataset.motionDelay || '0');
-              const kind = target.dataset.motionKind || 'reveal';
+      const animateEntrance = (element: HTMLElement | SVGElement) => {
+        if (disposed || !element.isConnected) return;
+        const delay = parseFloat(element.dataset.motionDelay || '0');
+        const kind = element.dataset.motionKind || 'reveal';
 
-              if (kind === 'draw') {
-                gsap.to(target, { opacity: 1, duration: 0.35, clearProps: 'opacity' });
-                const paths = target.querySelectorAll<SVGGeometryElement>('path:not([fill]), path[fill="none"], circle:not([fill])');
-                paths.forEach((path, index) => {
-                  const length = path.getTotalLength();
-                  gsap.fromTo(path,
-                    { strokeDasharray: length, strokeDashoffset: length },
-                    {
-                      strokeDashoffset: 0,
-                      duration: 1.1,
-                      delay: delay + index * 0.05,
-                      ease: 'power2.inOut',
-                      clearProps: 'strokeDasharray,strokeDashoffset',
-                    }
-                  );
-                });
-              } else if (kind === 'image') {
-                gsap.fromTo(target,
-                  { opacity: 0, y: 18, scale: 0.98 },
-                  {
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
-                    duration: 0.65,
-                    delay,
-                    ease: 'power2.out',
-                    clearProps: 'opacity,transform',
-                    force3D: true,
-                  }
-                );
-              } else {
-                gsap.fromTo(target,
-                  { opacity: 0, y: kind === 'heading' ? 22 : 16 },
-                  {
-                    opacity: 1,
-                    y: 0,
-                    duration: kind === 'heading' ? 0.65 : 0.5,
-                    delay,
-                    ease: 'power2.out',
-                    clearProps: 'opacity,transform',
-                    force3D: true,
-                  }
-                );
+        const context = gsap.context(() => {
+          if (kind === 'draw') {
+            gsap.to(element, { opacity: 1, duration: 0.35, clearProps: 'opacity' });
+            const paths = element.querySelectorAll<SVGGeometryElement>(
+              'path:not([fill]), path[fill="none"], circle:not([fill])'
+            );
+            paths.forEach((path, index) => {
+              const length = path.getTotalLength();
+              gsap.fromTo(
+                path,
+                { strokeDasharray: length, strokeDashoffset: length },
+                {
+                  strokeDashoffset: 0,
+                  duration: 1.15,
+                  delay: delay + index * 0.055,
+                  ease: 'power2.inOut',
+                  clearProps: 'strokeDasharray,strokeDashoffset',
+                }
+              );
+            });
+          } else if (kind === 'image') {
+            let responsive: gsap.MatchMedia | undefined;
+            const entrance = gsap.fromTo(
+              element,
+              { opacity: 0, y: isMobile ? 18 : 24, scale: 0.98 },
+              {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: isMobile ? 0.65 : 0.8,
+                delay,
+                ease: 'power2.out',
+                clearProps: 'opacity,transform',
+                force3D: true,
               }
+            );
+
+            const image = element.querySelector('img');
+            if (image && !isMobile) {
+              responsive = gsap.matchMedia();
+              responsive.add('(min-width: 901px) and (pointer: fine) and (prefers-reduced-motion: no-preference)', () => {
+                gsap.fromTo(
+                  image,
+                  { yPercent: -3, scale: 1.08 },
+                  {
+                    yPercent: 3,
+                    scale: 1.08,
+                    ease: 'none',
+                    scrollTrigger: {
+                      trigger: element,
+                      start: 'clamp(top bottom)',
+                      end: 'clamp(bottom top)',
+                      scrub: 0.8,
+                    },
+                  }
+                );
+              });
             }
-          });
-        }, {
-          rootMargin: '0px 0px -40px 0px',
-          threshold: 0.05,
-        });
-      }
+            records.set(element, { context, entrance, responsive });
+            return;
+          } else {
+            const distance = kind === 'heading' ? (isMobile ? 20 : 28) : kind === 'hero' ? 16 : (isMobile ? 14 : 20);
+            const duration = kind === 'heading' ? (isMobile ? 0.65 : 0.75) : (isMobile ? 0.5 : 0.65);
+
+            const entrance = gsap.fromTo(
+              element,
+              { opacity: 0, y: distance },
+              {
+                opacity: 1,
+                y: 0,
+                duration,
+                delay,
+                ease: 'power2.out',
+                clearProps: 'opacity,transform',
+                force3D: true,
+              }
+            );
+            records.set(element, { context, entrance });
+            return;
+          }
+        }, element);
+
+        records.set(element, { context });
+      };
+
+      const entranceObserver = typeof IntersectionObserver !== 'undefined'
+        ? new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  const target = entry.target as HTMLElement;
+                  entranceObserver?.unobserve(target);
+
+                  // If element was already scrolled past before observe, reveal immediately
+                  if (entry.boundingClientRect.bottom < 0) {
+                    gsap.set(target, { opacity: 1, clearProps: 'opacity,transform' });
+                    records.set(target, { context: gsap.context(() => {}) });
+                    return;
+                  }
+
+                  animateEntrance(target);
+                }
+              });
+            },
+            {
+              rootMargin: '0px 0px -40px 0px',
+              threshold: 0.05,
+            }
+          )
+        : null;
 
       const reveal = (element: Element, kind: string, delay = 0, immediate = false) => {
         if (records.has(element) || !element.getClientRects().length) return;
-        if (isMobile) {
-          const rect = element.getBoundingClientRect();
-          const aboveViewport = rect.bottom < 0;
-          if (aboveViewport) {
-            gsap.set(element, { opacity: 1, clearProps: 'opacity,transform' });
-            records.set(element, { context: gsap.context(() => {}) });
-            return;
-          }
-          if (immediate || kind === 'hero') {
-            const context = gsap.context(() => {
-              const entrance = gsap.fromTo(element,
-                { opacity: 0, y: 14 },
-                {
-                  opacity: 1, y: 0, duration: 0.55, delay,
-                  ease: 'power2.out', clearProps: 'opacity,transform', force3D: true,
-                }
-              );
-              records.set(element, { context, entrance });
-            }, element);
-            return;
-          }
-          if (mobileObserver && (element instanceof HTMLElement || element instanceof SVGElement)) {
-            element.setAttribute('data-motion-delay', String(delay));
-            element.setAttribute('data-motion-kind', kind);
-            if (kind === 'draw') {
-              gsap.set(element, { opacity: 0 });
-            } else {
-              gsap.set(element, { opacity: 0, y: kind === 'heading' ? 22 : 16, force3D: true });
-            }
-            mobileObserver.observe(element);
-            records.set(element, { context: gsap.context(() => {}) });
-          }
+        if (!(element instanceof HTMLElement || element instanceof SVGElement)) return;
+
+        element.setAttribute('data-motion-delay', String(delay));
+        element.setAttribute('data-motion-kind', kind);
+
+        // Immediate elements (e.g. hero items) animate right away
+        if (immediate || kind === 'hero') {
+          animateEntrance(element);
           return;
         }
-        // An already-scrolled-to destination should become readable immediately.
-        const aboveViewport = element.getBoundingClientRect().bottom < 0;
-        let entrance: gsap.core.Tween | undefined;
-        let responsive: gsap.MatchMedia | undefined;
-        const context = gsap.context(() => {
-          const trigger = immediate || aboveViewport ? undefined : {
-            trigger: element,
-            start: 'clamp(top 91%)',
-            once: true,
-            fastScrollEnd: true,
-            toggleActions: 'play none none none',
-          };
 
-          if (kind === 'draw') {
-            const paths = element.querySelectorAll<SVGGeometryElement>('path:not([fill]), path[fill="none"], circle:not([fill])');
-            paths.forEach((path, index) => {
-              const length = path.getTotalLength();
-              gsap.fromTo(path, { strokeDasharray: length, strokeDashoffset: length }, {
-                strokeDashoffset: 0, duration: 1.25, delay: index * 0.065,
-                ease: 'power2.inOut', scrollTrigger: trigger,
-                clearProps: 'strokeDasharray,strokeDashoffset',
-              });
-            });
-          } else if (kind === 'image') {
-            if (isMobile) {
-              entrance = gsap.fromTo(element,
-                { opacity: 0, y: 16 },
-                { opacity: 1, y: 0, duration: 0.65, delay, ease: 'power2.out', scrollTrigger: trigger, clearProps: 'opacity,transform', force3D: true });
-            } else {
-              entrance = gsap.fromTo(element,
-                { opacity: 0, clipPath: 'inset(0% 0% 18% 0% round 6px)' },
-                { opacity: 1, clipPath: 'inset(0% 0% 0% 0% round 6px)',
-                  duration: 1.05, delay, ease: 'power3.out', scrollTrigger: trigger,
-                  clearProps: 'opacity,clipPath', force3D: true });
-            }
-            const image = element.querySelector('img');
-            if (image) {
-              responsive = gsap.matchMedia();
-              responsive.add('(min-width: 901px) and (pointer: fine) and (prefers-reduced-motion: no-preference)', () => {
-                gsap.fromTo(image, { yPercent: -3, scale: 1.09 }, {
-                  yPercent: 3, scale: 1.09, ease: 'none',
-                  scrollTrigger: { trigger: element, start: 'clamp(top bottom)', end: 'clamp(bottom top)', scrub: 0.8 },
-                });
-              });
-            }
-          } else {
-            entrance = gsap.from(element, {
-              opacity: 0, y: kind === 'heading' ? (isMobile ? 18 : 30) : (isMobile ? 14 : 22),
-              duration: kind === 'heading' ? (isMobile ? 0.6 : 0.9) : (isMobile ? 0.5 : 0.72),
-              delay: aboveViewport ? 0 : delay,
-              ease: 'power3.out', scrollTrigger: trigger,
-              clearProps: 'opacity,transform',
-              force3D: true,
-            });
-          }
-        }, element);
-        records.set(element, { context, entrance, responsive });
-        if (aboveViewport) entrance?.progress(1);
+        // Check if already above current viewport
+        const rect = element.getBoundingClientRect();
+        if (rect.bottom < 0) {
+          gsap.set(element, { opacity: 1, clearProps: 'opacity,transform' });
+          records.set(element, { context: gsap.context(() => {}) });
+          return;
+        }
+
+        // Set initial invisible state and observe for scroll entrance
+        if (kind === 'draw') {
+          gsap.set(element, { opacity: 0 });
+        } else if (kind === 'image') {
+          gsap.set(element, { opacity: 0, y: isMobile ? 18 : 24, scale: 0.98, force3D: true });
+        } else {
+          const distance = kind === 'heading' ? (isMobile ? 20 : 28) : (isMobile ? 14 : 20);
+          gsap.set(element, { opacity: 0, y: distance, force3D: true });
+        }
+
+        if (entranceObserver) {
+          entranceObserver.observe(element);
+          records.set(element, { context: gsap.context(() => {}) });
+        } else {
+          animateEntrance(element);
+        }
       };
 
       const discover = () => {
-        // Inventory filters and streamed route content can introduce new nodes.
+        if (disposed) return;
+
+        // Clean up unmounted or removed elements
         for (const [element, record] of records) {
-          if (!element.isConnected || !readyScene(element)) { revertRecord(record); records.delete(element); }
+          if (!element.isConnected) {
+            revertRecord(record);
+            records.delete(element);
+          }
         }
-        document.querySelectorAll<HTMLElement>('[data-motion]').forEach(element => {
-          if (!readyScene(element) || element.closest('dialog') || !element.getClientRects().length) return;
+
+        // Find and register all motion elements across all pages
+        document.querySelectorAll<HTMLElement>('[data-motion]').forEach((element) => {
+          if (element.closest('dialog') || !element.isConnected || !element.getClientRects().length) return;
+
           const kind = element.dataset.motion;
           if (kind === 'stagger' || kind === 'hero') {
-            const items = element.querySelectorAll(':scope > [data-motion-item]');
-            items.forEach((item, index) => reveal(item, 'reveal', Math.min(index * (kind === 'hero' ? 0.09 : 0.065), 0.3), kind === 'hero'));
-          } else if (kind) reveal(element, kind);
+            const isHeroContainer = kind === 'hero';
+            // Find all matching child items whose closest stagger container is this element
+            const items = Array.from(element.querySelectorAll<HTMLElement>('[data-motion-item]')).filter(
+              (item) => item.closest('[data-motion="stagger"], [data-motion="hero"]') === element
+            );
+
+            items.forEach((item, index) => {
+              const itemDelay = Math.min(index * (isHeroContainer ? 0.08 : 0.06), 0.36);
+              reveal(item, isHeroContainer ? 'hero' : 'reveal', itemDelay, isHeroContainer);
+            });
+          } else if (kind) {
+            reveal(element, kind, 0, kind === 'hero');
+          }
         });
       };
 
@@ -228,30 +255,34 @@ export function SiteMotion() {
         });
         feedback.set(target, animation);
       };
+
       const press = (target: Element) => {
         settleFocusedContent(target);
         playFeedback(target, { scale: [{ to: 0.96, duration: 85 }, { to: 1, duration: 260 }], ease: 'out(3)' });
       };
+
       const onPointerDown = (event: PointerEvent) => {
         if (event.button !== 0 || !(event.target instanceof Element)) return;
-        if (!readyScene(event.target)) return;
         const target = event.target.closest('[data-motion-press]');
         if (target && !target.matches(':disabled')) press(target);
       };
+
       const onClick = (event: MouseEvent) => {
         if (!(event.target instanceof Element)) return;
-        if (!readyScene(event.target)) return;
         const button = event.target.closest('[data-motion-press]');
         if (event.detail === 0 && button && !button.matches(':disabled')) press(button);
         const heart = event.target.closest('[data-motion-feedback="heart"]')?.querySelector('svg');
-        if (heart) playFeedback(heart, {
-          scale: [{ to: 1.35, duration: 140 }, { to: 1, duration: 350 }],
-          rotate: [{ to: -12, duration: 140 }, { to: 0, duration: 350 }], ease: 'out(3)',
-        });
+        if (heart) {
+          playFeedback(heart, {
+            scale: [{ to: 1.35, duration: 140 }, { to: 1, duration: 350 }],
+            rotate: [{ to: -12, duration: 140 }, { to: 0, duration: 350 }],
+            ease: 'out(3)',
+          });
+        }
       };
+
       const onChange = (event: Event) => {
         if (!(event.target instanceof Element)) return;
-        if (!readyScene(event.target)) return;
         const choice = event.target.closest('[data-motion-feedback="choice"]');
         if (choice) {
           const target = choice.querySelector('div') || choice;
@@ -259,37 +290,58 @@ export function SiteMotion() {
           playFeedback(target, { scale: [{ to: 1.025, duration: 140 }, { to: 1, duration: 250 }], ease: 'out(3)' });
         }
       };
+
       const onToggle = (event: Event) => {
         const details = event.target;
-        if (!(details instanceof HTMLDetailsElement) || !readyScene(details) || details.dataset.motionFeedback !== 'accordion') return;
+        if (!(details instanceof HTMLDetailsElement) || details.dataset.motionFeedback !== 'accordion') return;
         if (details.open) {
-          Array.from(details.children).filter(child => child.tagName !== 'SUMMARY').forEach(body => {
-            playFeedback(body, { opacity: [0, 1], translateY: [-6, 0], duration: 300, ease: 'out(3)' });
-          });
+          Array.from(details.children)
+            .filter((child) => child.tagName !== 'SUMMARY')
+            .forEach((body) => {
+              playFeedback(body, { opacity: [0, 1], translateY: [-6, 0], duration: 300, ease: 'out(3)' });
+            });
         }
         window.clearTimeout(accordionTimer);
         accordionTimer = window.setTimeout(refresh, 360);
       };
+
       const onFocus = (event: FocusEvent) => {
         if (event.target instanceof Element) settleFocusedContent(event.target);
       };
-      const observer = new MutationObserver(() => {
+
+      const domObserver = new MutationObserver(() => {
         discover();
         if (!isMobile) refresh();
       });
+
       const onSceneReady = () => {
         discover();
         if (!isMobile) refresh();
       };
 
       const progressContext = gsap.context(() => {
-        if (progress.current && !isMobile) gsap.fromTo(progress.current, { scaleX: 0 }, {
-          scaleX: 1, ease: 'none',
-          scrollTrigger: { start: 0, end: 'max', scrub: 0.2 },
+        if (progress.current && !isMobile) {
+          gsap.fromTo(
+            progress.current,
+            { scaleX: 0 },
+            {
+              scaleX: 1,
+              ease: 'none',
+              scrollTrigger: { start: 0, end: 'max', scrub: 0.2 },
+            }
+          );
+        }
+      });
+
+      // Schedule discovery across animation frames for complete DOM & layout readiness
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          discover();
+          if (!isMobile) refresh();
         });
       });
-      discover();
-      observer.observe(document.body, { childList: true, subtree: true });
+
+      domObserver.observe(document.body, { childList: true, subtree: true });
       document.addEventListener('pointerdown', onPointerDown);
       document.addEventListener('click', onClick);
       document.addEventListener('change', onChange);
@@ -297,13 +349,17 @@ export function SiteMotion() {
       document.addEventListener('focusin', onFocus);
       document.addEventListener('load', refresh, true);
       document.addEventListener('parakh:motion-ready', onSceneReady);
-      document.fonts.ready.then(() => { if (!disposed) refresh(); });
-      refresh();
+      document.fonts.ready.then(() => {
+        if (!disposed) {
+          discover();
+          refresh();
+        }
+      });
 
       return () => {
         disposed = true;
-        mobileObserver?.disconnect();
-        observer.disconnect();
+        entranceObserver?.disconnect();
+        domObserver.disconnect();
         window.clearTimeout(refreshTimer);
         window.clearTimeout(accordionTimer);
         document.removeEventListener('pointerdown', onPointerDown);
@@ -313,11 +369,12 @@ export function SiteMotion() {
         document.removeEventListener('focusin', onFocus);
         document.removeEventListener('load', refresh, true);
         document.removeEventListener('parakh:motion-ready', onSceneReady);
-        feedback.forEach(animation => animation.revert());
+        feedback.forEach((animation) => animation.revert());
         records.forEach(revertRecord);
         progressContext.revert();
       };
     });
+
     return () => media.revert();
   }, [pathname]);
 

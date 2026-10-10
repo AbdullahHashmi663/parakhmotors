@@ -1,6 +1,6 @@
 import { Wallet, ShieldCheck, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { CustomerPage, CustomerHero, CustomerSteps, CustomerChecklist, CustomerFAQ, customerStyles as s } from '@/components/CustomerPages';
+import { CustomerPage, CustomerHero, CustomerSteps, CustomerChecklist, CustomerFAQ, CustomerCTA, customerStyles as s } from '@/components/CustomerPages';
 import { CustomerRequestForm } from '@/components/CustomerRequestForm';
 
 export default function InvestorPage() {
@@ -8,5 +8,6 @@ export default function InvestorPage() {
     <CustomerSteps title="A direct route to your next chapter." steps={[{ title: 'Share the details.', description: 'Tell us about your car, mileage, condition and expected price.' }, { title: 'Understand the offer.', description: 'Our team reviews the vehicle and discusses assessment and offer arrangements.' }, { title: 'Decide with clarity.', description: 'Review the proposed terms and choose whether to proceed with the sale.' }]} />
     <section className={s.section} id="cash-offer-form"><div className={`container-custom ${s.formLayout}`}><div data-motion="reveal" className={s.formAside}><p className={s.eyebrow}>A personal assessment</p><h2>Your car’s next move<br />starts with the details.</h2><p>A cash offer request starts a conversation. An inspection and review will inform any final proposal.</p><CustomerChecklist items={['A direct conversation with our team', 'Clear vehicle and ownership assessment', 'Guidance on the payment and handover']} /><div className={s.asideNote}><Wallet size={23} aria-hidden="true" /><span>Submitting a request does not commit you to a sale. Final value and terms are confirmed with our team.</span></div><Link data-motion-press href="/client/sell-my-car" className={s.cardAction}>Prefer a listing service?<ArrowRight size={16} aria-hidden="true" /></Link><div className={s.asideNote}><ShieldCheck size={22} aria-hidden="true" /><span>We use your details to assess your request and get back to you.</span></div></div><CustomerRequestForm kind="investor" /></div></section>
     <CustomerFAQ items={[{ question: 'Is the online estimate a confirmed offer?', answer: 'No. The initial range is an automated indication based on your asking price. A confirmed offer follows a review of your car and a conversation with our team.' }, { question: 'Am I committed to selling when I submit?', answer: 'No. Your request lets us review your vehicle and discuss options. You decide whether to proceed once the terms have been explained.' }]} />
+    <CustomerCTA title="Ready for a straightforward cash offer?" description="Submit your vehicle details above or discuss directly with our acquisition desk." href="#cash-offer-form" label="Request cash offer" />
   </CustomerPage>;
 }

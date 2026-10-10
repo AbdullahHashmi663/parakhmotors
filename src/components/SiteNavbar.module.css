@@ -66,6 +66,7 @@
 }
 
 @media (max-width: 1000px) {
+  .header { transition: none; }
   .desktopNav,
   .bookingLink { display: none; }
   .menuButton { display: inline-flex; }

@@ -24,7 +24,7 @@ export function SiteMotion() {
       let refreshTimer: number = 0;
       let accordionTimer = 0;
       let disposed = false;
-      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches;
       const readyScene = (element: Element) => element.closest('[data-motion-scene][data-motion-ready="true"]');
       const revertRecord = (record: MotionRecord) => { record.responsive?.revert(); record.context.revert(); };
 
@@ -37,6 +37,19 @@ export function SiteMotion() {
 
       const reveal = (element: Element, kind: string, delay = 0, immediate = false) => {
         if (records.has(element) || !element.getClientRects().length) return;
+        if (isMobile) {
+          // On mobile touch devices, run a light one-shot entrance for the hero without attaching ScrollTrigger
+          if (kind === 'hero' || immediate) {
+            const context = gsap.context(() => {
+              const entrance = gsap.from(element, {
+                opacity: 0, y: 12, duration: 0.5, delay,
+                ease: 'power2.out', clearProps: 'opacity,transform',
+              });
+              records.set(element, { context, entrance });
+            }, element);
+          }
+          return;
+        }
         // An already-scrolled-to destination should become readable immediately.
         const aboveViewport = element.getBoundingClientRect().bottom < 0;
         let entrance: gsap.core.Tween | undefined;
@@ -46,7 +59,7 @@ export function SiteMotion() {
             trigger: element,
             start: 'clamp(top 91%)',
             once: true,
-            fastScrollEnd: !isMobile,
+            fastScrollEnd: true,
             toggleActions: 'play none none none',
           };
 
@@ -181,13 +194,13 @@ export function SiteMotion() {
       const onSceneReady = () => { discover(); refresh(); };
 
       const progressContext = gsap.context(() => {
-        if (progress.current) gsap.fromTo(progress.current, { scaleX: 0 }, {
+        if (progress.current && !isMobile) gsap.fromTo(progress.current, { scaleX: 0 }, {
           scaleX: 1, ease: 'none',
-          scrollTrigger: { start: 0, end: 'max', scrub: isMobile ? true : 0.2 },
+          scrollTrigger: { start: 0, end: 'max', scrub: 0.2 },
         });
       });
       discover();
-      observer.observe(document.body, { childList: true, subtree: true });
+      if (!isMobile) observer.observe(document.body, { childList: true, subtree: true });
       document.addEventListener('pointerdown', onPointerDown);
       document.addEventListener('click', onClick);
       document.addEventListener('change', onChange);

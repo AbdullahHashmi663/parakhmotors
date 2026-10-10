@@ -35,18 +35,56 @@ export function SiteMotion() {
         }, 120);
       };
 
+      let mobileObserver: IntersectionObserver | null = null;
+      if (isMobile && typeof IntersectionObserver !== 'undefined') {
+        mobileObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const target = entry.target as HTMLElement;
+              mobileObserver?.unobserve(target);
+              const delay = parseFloat(target.dataset.motionDelay || '0');
+              const kind = target.dataset.motionKind || 'reveal';
+              gsap.fromTo(target,
+                { opacity: 0, y: kind === 'heading' ? 22 : 16 },
+                {
+                  opacity: 1,
+                  y: 0,
+                  duration: kind === 'heading' ? 0.65 : 0.5,
+                  delay,
+                  ease: 'power2.out',
+                  clearProps: 'opacity,transform',
+                  force3D: true,
+                }
+              );
+            }
+          });
+        }, {
+          rootMargin: '0px 0px -6% 0px',
+          threshold: 0.05,
+        });
+      }
+
       const reveal = (element: Element, kind: string, delay = 0, immediate = false) => {
         if (records.has(element) || !element.getClientRects().length) return;
         if (isMobile) {
-          // On mobile touch devices, run a light one-shot entrance for the hero without attaching ScrollTrigger
-          if (kind === 'hero' || immediate) {
+          const aboveViewport = element.getBoundingClientRect().bottom < 0;
+          if (aboveViewport || immediate || kind === 'hero') {
             const context = gsap.context(() => {
-              const entrance = gsap.from(element, {
-                opacity: 0, y: 12, duration: 0.5, delay,
-                ease: 'power2.out', clearProps: 'opacity,transform',
-              });
+              const entrance = gsap.fromTo(element,
+                { opacity: 0, y: 14 },
+                {
+                  opacity: 1, y: 0, duration: 0.55, delay,
+                  ease: 'power2.out', clearProps: 'opacity,transform', force3D: true,
+                }
+              );
               records.set(element, { context, entrance });
             }, element);
+          } else if (mobileObserver && element instanceof HTMLElement) {
+            element.dataset.motionDelay = String(delay);
+            element.dataset.motionKind = kind;
+            gsap.set(element, { opacity: 0, y: kind === 'heading' ? 22 : 16, force3D: true });
+            mobileObserver.observe(element);
+            records.set(element, { context: gsap.context(() => {}) });
           }
           return;
         }
@@ -213,6 +251,7 @@ export function SiteMotion() {
 
       return () => {
         disposed = true;
+        mobileObserver?.disconnect();
         observer.disconnect();
         window.clearTimeout(refreshTimer);
         window.clearTimeout(accordionTimer);

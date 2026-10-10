@@ -1,0 +1,129 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--pm-paper), transparent 5%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--pm-line);
+  transition: var(--transition);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 76px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoImg {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandName {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--pm-ink);
+  text-transform: uppercase;
+}
+
+.brandTagline {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--pm-green);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.navLink {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--pm-muted);
+  transition: var(--transition);
+  position: relative;
+  padding: 6px 0;
+}
+
+.navLink:hover {
+  color: var(--pm-ink);
+}
+
+.navLinkActive {
+  color: var(--pm-ink);
+}
+
+.navLinkActive::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--pm-green);
+  border-radius: 2px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.phoneLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--pm-muted);
+  transition: var(--transition);
+}
+
+.phoneLink:hover {
+  color: var(--pm-ink);
+}
+
+.phoneIcon {
+  color: var(--pm-green);
+}
+
+.mobileToggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--pm-ink);
+  font-size: 1.5rem;
+  padding: 4px;
+}
+
+@media (max-width: 900px) {
+  .navLinks,
+  .phoneLink {
+    display: none;
+  }
+
+  .mobileToggle {
+    display: block;
+  }
+}

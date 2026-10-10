@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Bundled agent tools are vendor code, not application source.
+    ".agents/**",
   ]),
 ]);
 

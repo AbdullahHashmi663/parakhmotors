@@ -1,0 +1,140 @@
+.section {
+  padding: 70px 0;
+  background-color: var(--pm-soft);
+  border-top: 1px solid var(--pm-line);
+  border-bottom: 1px solid var(--pm-line);
+}
+
+.wrapper {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tag {
+  color: var(--pm-green);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.heading {
+  font-size: 2.3rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--pm-ink);
+}
+
+.desc {
+  font-size: 0.95rem;
+  color: var(--pm-muted);
+  line-height: 1.6;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--pm-ink);
+}
+
+.featureIcon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--pm-tint);
+  color: var(--pm-green);
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.formCard {
+  background-color: var(--pm-surface);
+  border: 1px solid var(--pm-line);
+  border-radius: var(--radius-md);
+  padding: 28px;
+  box-shadow: 0 15px 35px color-mix(in srgb, var(--pm-ink), transparent 85%);
+}
+
+.formTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--pm-ink);
+  margin-bottom: 6px;
+}
+
+.formSubtitle {
+  font-size: 0.82rem;
+  color: var(--pm-muted);
+  margin-bottom: 20px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 0.78rem;
+  color: var(--pm-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.valuationResult {
+  margin-top: 18px;
+  padding: 16px;
+  background-color: var(--pm-tint);
+  border: 1px solid var(--pm-green);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.valuationLabel {
+  font-size: 0.75rem;
+  color: var(--pm-green);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.valuationAmount {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--pm-ink);
+}
+
+@media (max-width: 900px) {
+  .wrapper {
+    grid-template-columns: 1fr;
+  }
+}

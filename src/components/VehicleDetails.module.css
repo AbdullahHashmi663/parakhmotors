@@ -1,0 +1,43 @@
+.dialog { border: 0; border-radius: 10px; padding: 0; width: min(760px,calc(100% - 32px)); max-height: 90dvh; background: var(--pm-paper); overflow-y: auto; box-shadow: 0 25px 80px color-mix(in srgb, var(--pm-ink), transparent 80%); }
+.dialog::backdrop { background: rgb(0 0 0 / 65%); backdrop-filter: blur(5px); opacity: var(--dialog-backdrop-opacity,1); }
+.content { position: relative; }
+.close { position: absolute; right: 15px; top: 15px; z-index: 2; width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: var(--pm-paper); border-radius: 50%; color: var(--pm-green); }
+.close svg { width: 20px; height: 20px; }
+.gallery { position: relative; height: 330px; background: var(--pm-soft); }
+.gallery img { object-fit: cover; }
+.gallery > span { position: absolute; left: 22px; bottom: 18px; background: var(--pm-paper); color: var(--pm-green); display: flex; gap: 7px; align-items: center; padding: 7px 12px; font-size: 11px; border-radius: 4px; }
+.gallery svg { width: 15px; height: 15px; }
+.thumbnails { padding: 15px 30px 0; display: flex; gap: 12px; }
+.thumbnails button { padding: 3px; border: 1px solid transparent; background: transparent; border-radius: 4px; transition: border-color 180ms, background 180ms; }
+.thumbnails button[aria-pressed=true] { border-color: var(--pm-green); }
+.thumbnails img { object-fit: cover; border-radius: 3px; }
+.details { padding: 28px 36px 32px; }
+.meta { display: flex; justify-content: space-between; align-items: center; gap: 15px; color: var(--pm-muted); font-size: 11px; }
+.meta span { display: flex; align-items: center; gap: 5px; }
+.meta svg { width: 13px; height: 13px; }
+.details h2 { font-size: 30px; font-weight: 550; letter-spacing: -.9px; line-height: 1.3; margin-top: 13px; }
+.price { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-size: 24px; font-weight: 550; margin-block: 14px 25px; color: var(--pm-green); }
+.price span { font-size: 10px; font-weight: 400; border: 1px solid var(--pm-line); padding: 5px 10px; border-radius: 3px; }
+.specs { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; padding: 22px 0; border-block: 1px solid var(--pm-line); }
+.specs span { display: block; color: var(--pm-muted); font-size: 10px; }
+.specs strong { display: block; font-size: 12px; font-weight: 500; text-transform: capitalize; margin-top: 4px; }
+.description { color: var(--pm-muted); font-size: 13px; line-height: 1.9; margin-top: 22px; }
+.features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-block: 25px; }
+.features span { display: flex; align-items: center; gap: 7px; font-size: 11px; }
+.features svg { width: 14px; height: 14px; color: var(--pm-green); flex-shrink: 0; }
+.formPanel { background: var(--pm-tint); border: 1px solid var(--pm-line); border-radius: 5px; padding: 25px; }
+.formPanel h3 { font-size: 23px; font-weight: 500; letter-spacing: -.5px; }
+.formPanel > p { color: var(--pm-muted); font-size: 12px; margin-block: 9px 20px; }
+.formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.formGrid label { font-size: 11px; font-weight: 550; }
+.formGrid input, .formGrid textarea { display: block; width: 100%; margin-top: 6px; padding: 12px; min-height: 44px; background: var(--pm-surface); color: var(--pm-ink); border: 1px solid var(--pm-line); border-radius: 4px; font-size: 12px; font-weight: 400; }
+.formGrid input::placeholder, .formGrid textarea::placeholder { color: var(--pm-muted); opacity: 1; }
+.formGrid textarea { resize: vertical; }
+.full { grid-column: 1 / -1; }
+.error { background: #fff0ec; border: 1px solid #ebc5bd; padding: 12px; font-size: 12px; color: #7c3426; margin-bottom: 15px; border-radius: 4px; }
+.success { text-align: center; padding: 15px; }
+.success > svg { height: 36px; width: 36px; color: var(--pm-green); margin-bottom: 15px; }
+.success p { margin-block: 14px 20px; font-size: 13px; color: var(--pm-muted); }
+.inspectionLink { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: var(--pm-green); margin-top: 20px; min-height: 44px; }
+.inspectionLink svg { width: 15px; height: 15px; }
+@media (max-width: 600px) { .gallery { height: 240px; } .details { padding: 22px; } .details h2 { font-size: 25px; } .specs { grid-template-columns: 1fr 1fr; } .meta { flex-wrap: wrap; } .features { grid-template-columns: 1fr; } .formPanel { padding: 18px; } .formGrid { grid-template-columns: 1fr; } .formPanel h3 { font-size: 21px; } .formPanel form > button { width: 100%; } }

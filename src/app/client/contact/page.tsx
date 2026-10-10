@@ -1,0 +1,13 @@
+'use client';
+import { MapPin, Phone, Mail, Clock, MessageCircle, ArrowUpRight } from 'lucide-react';
+import { CustomerPage, CustomerHero, customerStyles as s } from '@/components/CustomerPages';
+import { CustomerRequestForm } from '@/components/CustomerRequestForm';
+import { useDealershipSettings } from '@/components/useDealershipSettings';
+
+export default function ContactPage() {
+  const contact = useDealershipSettings();
+  const whatsapp = `https://wa.me/${contact.whatsapp.replace(/[^\d]/g, '')}`;
+  return <CustomerPage><CustomerHero eyebrow="Let’s talk" title={<>A good conversation.<br /><span className={s.accent}>A great place to start.</span></>} description="A car you’ve seen, a car you’re searching for, or a question on your mind. We’re here to listen and help you take the next step." image="/images/parakh-journey.webp" imageAlt="An open road through the mountains of Pakistan" imageLabel="Personal advice. Just a conversation away." action={{ href: '#contact-form', label: 'Send us a message' }} />
+    <section className={s.section} id="contact-form"><div className={`container-custom ${s.formLayout}`}><div data-motion="reveal" className={s.formAside}><p className={s.eyebrow}>People first</p><h2>Here for your<br />next chapter.</h2><p>Speak to our team directly or send a message. We’ll get back to you using the contact details you provide.</p><div data-motion="stagger" className={s.contactList}><div data-motion-item className={s.contactRow}><Phone size={21} aria-hidden="true" /><div><span>Give us a call</span><a href={`tel:${contact.phone.replace(/[^+\d]/g, '')}`}>{contact.phone}</a></div></div><div data-motion-item className={s.contactRow}><Mail size={21} aria-hidden="true" /><div><span>Write to our team</span><a href={`mailto:${contact.email}`}>{contact.email}</a></div></div><div data-motion-item className={s.contactRow}><MapPin size={21} aria-hidden="true" /><div><span>Visit Parakh Motors</span><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`} target="_blank" rel="noopener noreferrer">{contact.address}</a></div></div><div data-motion-item className={s.contactRow}><Clock size={21} aria-hidden="true" /><div><span>Showroom hours</span><strong>{contact.workingHours}</strong></div></div></div><a data-motion-press className="btn-secondary" href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle aria-hidden="true" />Talk on WhatsApp<ArrowUpRight aria-hidden="true" /></a></div><CustomerRequestForm kind="contact" /></div></section>
+  </CustomerPage>;
+}

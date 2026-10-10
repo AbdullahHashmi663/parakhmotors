@@ -116,6 +116,7 @@ function AdminExperience() {
   const [isSaving, setIsSaving] = useState(false);
   const adminRoot = useRef<HTMLDivElement>(null);
   const adminMain = useRef<HTMLElement>(null);
+  const previousAnimatedTab = useRef(activeTab);
   const toast = useRef<HTMLDivElement>(null);
   const vehicleDialog = useRef<HTMLDialogElement>(null);
   const dialogMotion = useRef<gsap.Context | null>(null);
@@ -196,35 +197,14 @@ function AdminExperience() {
     return () => window.removeEventListener(ADMIN_SESSION_EXPIRED, expireSession);
   }, []);
   useEffect(() => {
-    const root = adminRoot.current;
-    if (isCheckingSession || !root) return;
-    const media = gsap.matchMedia();
-    media.add('(prefers-reduced-motion: no-preference)', () => {
-      if (!isAuthenticated) {
-        gsap.fromTo(root.querySelectorAll(`.${styles.loginStory} > *`), { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: .7, stagger: .1, ease: 'power3.out', clearProps: 'transform,opacity' });
-        gsap.fromTo(root.querySelector(`.${styles.loginForm}`), { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: .65, delay: .15, ease: 'power3.out', clearProps: 'transform,opacity' });
-      } else {
-        gsap.fromTo(root.querySelector(`.${styles.sidebarLogo}`), { x: -12, opacity: 0 }, { x: 0, opacity: 1, duration: .5, ease: 'power3.out', clearProps: 'transform,opacity' });
-        gsap.fromTo(root.querySelectorAll(`.${styles.navItem} > svg, .${styles.navItem} > span`), { x: -12, opacity: 0 }, { x: 0, opacity: 1, duration: .45, stagger: .018, ease: 'power3.out', clearProps: 'transform,opacity' });
-      }
-    }, root);
-    return () => media.revert();
-  }, [isAuthenticated, isCheckingSession]);
-  useEffect(() => {
     const main = adminMain.current;
     if (!isAuthenticated || isLoading || !main) return;
+    // Keep the first rendered page visible; animate only a requested tab change.
+    if (previousAnimatedTab.current === activeTab) return;
+    previousAnimatedTab.current = activeTab;
     const media = gsap.matchMedia();
     media.add('(prefers-reduced-motion: no-preference)', () => {
-      gsap.fromTo(main.querySelector('[data-admin-heading]'), { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: .4, ease: 'power3.out', clearProps: 'transform,opacity' });
-      const items = Array.from(main.querySelectorAll('[data-admin-item]')).slice(0, 12);
-      if (items.length) {
-        const rows = items.filter(item => item.tagName === 'TR');
-        const cards = items.filter(item => item.tagName !== 'TR');
-        if (rows.length) gsap.fromTo(rows, { opacity: 0 }, { opacity: 1, duration: .35, stagger: .035, clearProps: 'opacity' });
-        if (cards.length) gsap.fromTo(cards, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: .48, stagger: .04, ease: 'power3.out', clearProps: 'transform,opacity' });
-      } else {
-        gsap.fromTo(main.querySelectorAll('[data-admin-panel]'), { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: .45, ease: 'power3.out', clearProps: 'transform,opacity' });
-      }
+      gsap.fromTo(main.querySelectorAll('[data-admin-panel]'), { y: 8 }, { y: 0, duration: .3, ease: 'power3.out', clearProps: 'transform' });
     }, main);
     return () => media.revert();
   }, [isAuthenticated, isLoading, activeTab]);

@@ -1,22 +1,18 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 export function ScrollToTop() {
   const pathname = usePathname();
-  const isFirstMount = useRef(true);
-
-  useEffect(() => {
-    // Only scroll to top on subsequent route navigation, NOT on initial load or page refresh
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
-      return;
-    }
-
+  useLayoutEffect(() => {
+    // Opening and refreshing a page starts at the top; explicit anchors remain usable.
+    const restoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
     if (!window.location.hash) {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
+    return () => { window.history.scrollRestoration = restoration; };
   }, [pathname]);
 
   return null;

@@ -13,6 +13,9 @@ type MotionRecord = {
   context: gsap.Context;
   entrance?: gsap.core.Tween;
   responsive?: gsap.MatchMedia;
+  kind: string;
+  delay: number;
+  state: 'pending' | 'active' | 'settled';
 };
 
 /** Progressive enhancement: the server always renders visible, usable content. */
@@ -21,17 +24,13 @@ export function SiteMotion() {
   const progress = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Immediately reset scroll position on route change so new page elements evaluate from top: 0
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    }
-
     const media = gsap.matchMedia();
     media.add('(prefers-reduced-motion: no-preference)', () => {
       const records = new Map<Element, MotionRecord>();
       const feedback = new Map<Element, ReturnType<typeof animate>>();
       let refreshTimer = 0;
       let accordionTimer = 0;
+      let discoveryFrame = 0;
       let disposed = false;
       const isMobile = window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches;
 
@@ -39,6 +38,9 @@ export function SiteMotion() {
         record.responsive?.revert();
         record.context.revert();
       };
+
+      const isReady = (element: Element) =>
+        element.closest('[data-motion-scene]')?.getAttribute('data-motion-ready') === 'true';
 
       const refresh = () => {
         window.clearTimeout(refreshTimer);
@@ -48,13 +50,21 @@ export function SiteMotion() {
       };
 
       const animateEntrance = (element: HTMLElement | SVGElement) => {
-        if (disposed || !element.isConnected) return;
-        const delay = parseFloat(element.dataset.motionDelay || '0');
-        const kind = element.dataset.motionKind || 'reveal';
+        const record = records.get(element);
+        if (disposed || !element.isConnected || !isReady(element) || record?.state !== 'pending') return;
+        const { kind, delay } = record;
+        record.state = 'active';
 
-        const context = gsap.context(() => {
+        // The context already exists before this synchronous callback runs.
+        // It owns both the hidden state and the tween so navigation restores the DOM.
+        record.context.add(() => {
           if (kind === 'draw') {
-            gsap.to(element, { opacity: 1, duration: 0.35, clearProps: 'opacity' });
+            record.entrance = gsap.to(element, {
+              opacity: 1,
+              duration: 0.35,
+              clearProps: 'opacity',
+              onComplete: () => { record.state = 'settled'; },
+            });
             const paths = element.querySelectorAll<SVGGeometryElement>(
               'path:not([fill]), path[fill="none"], circle:not([fill])'
             );
@@ -73,10 +83,8 @@ export function SiteMotion() {
               );
             });
           } else if (kind === 'image') {
-            let responsive: gsap.MatchMedia | undefined;
-            const entrance = gsap.fromTo(
+            record.entrance = gsap.to(
               element,
-              { opacity: 0, y: isMobile ? 18 : 24, scale: 0.98 },
               {
                 opacity: 1,
                 y: 0,
@@ -86,13 +94,14 @@ export function SiteMotion() {
                 ease: 'power2.out',
                 clearProps: 'opacity,transform',
                 force3D: true,
+                onComplete: () => { record.state = 'settled'; },
               }
             );
 
             const image = element.querySelector('img');
             if (image && !isMobile) {
-              responsive = gsap.matchMedia();
-              responsive.add('(min-width: 901px) and (pointer: fine) and (prefers-reduced-motion: no-preference)', () => {
+              record.responsive = gsap.matchMedia();
+              record.responsive.add('(min-width: 901px) and (pointer: fine) and (prefers-reduced-motion: no-preference)', () => {
                 gsap.fromTo(
                   image,
                   { yPercent: -3, scale: 1.08 },
@@ -110,15 +119,11 @@ export function SiteMotion() {
                 );
               });
             }
-            records.set(element, { context, entrance, responsive });
-            return;
           } else {
-            const distance = kind === 'heading' ? (isMobile ? 20 : 28) : kind === 'hero' ? 16 : (isMobile ? 14 : 20);
             const duration = kind === 'heading' ? (isMobile ? 0.65 : 0.75) : (isMobile ? 0.5 : 0.65);
 
-            const entrance = gsap.fromTo(
+            record.entrance = gsap.to(
               element,
-              { opacity: 0, y: distance },
               {
                 opacity: 1,
                 y: 0,
@@ -127,28 +132,29 @@ export function SiteMotion() {
                 ease: 'power2.out',
                 clearProps: 'opacity,transform',
                 force3D: true,
+                onComplete: () => { record.state = 'settled'; },
               }
             );
-            records.set(element, { context, entrance });
-            return;
           }
-        }, element);
-
-        records.set(element, { context });
+        });
       };
 
       const entranceObserver = typeof IntersectionObserver !== 'undefined'
         ? new IntersectionObserver(
             (entries) => {
+              if (disposed) return;
               entries.forEach((entry) => {
-                if (entry.isIntersecting) {
+                if (entry.isIntersecting || entry.boundingClientRect.bottom <= 0) {
                   const target = entry.target as HTMLElement;
                   entranceObserver?.unobserve(target);
 
-                  // If element was already scrolled past before observe, reveal immediately
-                  if (entry.boundingClientRect.bottom < 0) {
-                    gsap.set(target, { opacity: 1, clearProps: 'opacity,transform' });
-                    records.set(target, { context: gsap.context(() => {}) });
+                  // Fast scrolling can carry a pending reveal past the viewport.
+                  if (entry.boundingClientRect.bottom <= 0) {
+                    const record = records.get(target);
+                    if (record) {
+                      revertRecord(record);
+                      record.state = 'settled';
+                    }
                     return;
                   }
 
@@ -163,43 +169,30 @@ export function SiteMotion() {
           )
         : null;
 
-      const reveal = (element: Element, kind: string, delay = 0, immediate = false) => {
-        if (records.has(element) || !element.getClientRects().length) return;
+      const reveal = (element: Element, kind: string, delay = 0) => {
+        if (records.has(element) || !isReady(element) || !element.getClientRects().length) return;
         if (!(element instanceof HTMLElement || element instanceof SVGElement)) return;
 
-        element.setAttribute('data-motion-delay', String(delay));
-        element.setAttribute('data-motion-kind', kind);
-
-        // Immediate elements (e.g. hero items) animate right away
-        if (immediate || kind === 'hero') {
-          animateEntrance(element);
-          return;
-        }
-
-        // Check if already above current viewport
+        // First paint and streamed content stay readable. Only content below the
+        // viewport is prepared for a future scroll reveal after its scene commits.
         const rect = element.getBoundingClientRect();
-        if (rect.bottom < 0) {
-          gsap.set(element, { opacity: 1, clearProps: 'opacity,transform' });
-          records.set(element, { context: gsap.context(() => {}) });
+        if (rect.top < window.innerHeight || !entranceObserver) {
+          records.set(element, { context: gsap.context(() => {}, element), kind, delay, state: 'settled' });
           return;
         }
 
-        // Set initial invisible state and observe for scroll entrance
-        if (kind === 'draw') {
-          gsap.set(element, { opacity: 0 });
-        } else if (kind === 'image') {
-          gsap.set(element, { opacity: 0, y: isMobile ? 18 : 24, scale: 0.98, force3D: true });
-        } else {
-          const distance = kind === 'heading' ? (isMobile ? 20 : 28) : (isMobile ? 14 : 20);
-          gsap.set(element, { opacity: 0, y: distance, force3D: true });
-        }
-
-        if (entranceObserver) {
-          entranceObserver.observe(element);
-          records.set(element, { context: gsap.context(() => {}) });
-        } else {
-          animateEntrance(element);
-        }
+        const context = gsap.context(() => {
+          if (kind === 'draw') {
+            gsap.set(element, { opacity: 0 });
+          } else if (kind === 'image') {
+            gsap.set(element, { opacity: 0, y: isMobile ? 18 : 24, scale: 0.98, force3D: true });
+          } else {
+            const distance = kind === 'heading' ? (isMobile ? 20 : 28) : (isMobile ? 14 : 20);
+            gsap.set(element, { opacity: 0, y: distance, force3D: true });
+          }
+        }, element);
+        records.set(element, { context, kind, delay, state: 'pending' });
+        entranceObserver.observe(element);
       };
 
       const discover = () => {
@@ -207,7 +200,8 @@ export function SiteMotion() {
 
         // Clean up unmounted or removed elements
         for (const [element, record] of records) {
-          if (!element.isConnected) {
+          if (!element.isConnected || !isReady(element)) {
+            entranceObserver?.unobserve(element);
             revertRecord(record);
             records.delete(element);
           }
@@ -215,7 +209,7 @@ export function SiteMotion() {
 
         // Find and register all motion elements across all pages
         document.querySelectorAll<HTMLElement>('[data-motion]').forEach((element) => {
-          if (element.closest('dialog') || !element.isConnected || !element.getClientRects().length) return;
+          if (element.closest('dialog') || !element.isConnected || !isReady(element) || !element.getClientRects().length) return;
 
           const kind = element.dataset.motion;
           if (kind === 'stagger' || kind === 'hero') {
@@ -227,19 +221,20 @@ export function SiteMotion() {
 
             items.forEach((item, index) => {
               const itemDelay = Math.min(index * (isHeroContainer ? 0.08 : 0.06), 0.36);
-              reveal(item, isHeroContainer ? 'hero' : 'reveal', itemDelay, isHeroContainer);
+              reveal(item, isHeroContainer ? 'hero' : 'reveal', itemDelay);
             });
           } else if (kind) {
-            reveal(element, kind, 0, kind === 'hero');
+            reveal(element, kind);
           }
         });
       };
 
       const settleFocusedContent = (target: Element) => {
         for (const [element, record] of records) {
-          if (element.contains(target) && record.entrance) {
-            record.entrance.scrollTrigger?.kill();
-            record.entrance.progress(1);
+          if (element.contains(target) && record.state !== 'settled') {
+            entranceObserver?.unobserve(element);
+            revertRecord(record);
+            record.state = 'settled';
           }
         }
       };
@@ -309,15 +304,17 @@ export function SiteMotion() {
         if (event.target instanceof Element) settleFocusedContent(event.target);
       };
 
-      const domObserver = new MutationObserver(() => {
-        discover();
-        if (!isMobile) refresh();
-      });
-
-      const onSceneReady = () => {
-        discover();
-        if (!isMobile) refresh();
+      const scheduleDiscovery = () => {
+        if (disposed || discoveryFrame) return;
+        discoveryFrame = requestAnimationFrame(() => {
+          discoveryFrame = 0;
+          discover();
+          if (!isMobile) refresh();
+        });
       };
+
+      const domObserver = new MutationObserver(scheduleDiscovery);
+      const onSceneReady = scheduleDiscovery;
 
       const progressContext = gsap.context(() => {
         if (progress.current && !isMobile) {
@@ -333,13 +330,7 @@ export function SiteMotion() {
         }
       });
 
-      // Schedule discovery across animation frames for complete DOM & layout readiness
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          discover();
-          if (!isMobile) refresh();
-        });
-      });
+      scheduleDiscovery();
 
       domObserver.observe(document.body, { childList: true, subtree: true });
       document.addEventListener('pointerdown', onPointerDown);
@@ -351,7 +342,7 @@ export function SiteMotion() {
       document.addEventListener('parakh:motion-ready', onSceneReady);
       document.fonts.ready.then(() => {
         if (!disposed) {
-          discover();
+          scheduleDiscovery();
           refresh();
         }
       });
@@ -362,6 +353,7 @@ export function SiteMotion() {
         domObserver.disconnect();
         window.clearTimeout(refreshTimer);
         window.clearTimeout(accordionTimer);
+        cancelAnimationFrame(discoveryFrame);
         document.removeEventListener('pointerdown', onPointerDown);
         document.removeEventListener('click', onClick);
         document.removeEventListener('change', onChange);

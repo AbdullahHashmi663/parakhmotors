@@ -8,14 +8,19 @@ Parakh makes a car decision feel informed and manageable. Speak with the calm co
 
 ## Logo
 
-The custom interlocking PM mark combines a geometric P with an M that forms an inspection check and a path forward. Its square structure suggests precision; softly rounded corners make the identity approachable. The two-line uppercase wordmark gives the company a compact, dependable signature.
+The original automotive crest frames a sculpted front-facing car inside a tapered shield. Its balanced roofline, angular headlights and fine inset suggest precision and care. A small diamond completes the crest. The custom uppercase PARAKH wordmark and widely spaced MOTORS signature are drawn entirely as vector paths, so their appearance never depends on a font loading.
 
 - `public/brand/parakh-logo.svg`: primary presentation on a white background.
 - `public/brand/logo-dark.svg`: reverse presentation on forest green.
-- `public/brand/mark.svg`: compact mark for a favicon or avatar.
+- `public/brand/mark.svg`: simplified car crest for a favicon or avatar.
+- `public/brand/apple-touch-icon.png`: 180px home screen icon.
+- `src/app/favicon.ico`: 16, 32, 48 and 64px browser icons.
+- `src/lib/brand-logo.ts`: shared source geometry for all variants.
 - `src/components/BrandLogo.tsx`: responsive in-product identity. `compact` shows the mark alone; `inverse` provides the reverse variant.
 
-Use the primary asset on ivory or white and the reverse asset on forest green. The in-product logo follows the selected Theme studio palette using readable foreground/background pairs; its geometry stays the same. Keep the full signature at least 160px wide; use the mark alone below that size, with a minimum digital size of 24px. Preserve the aspect ratio and leave clear space at least equal to one quarter of the mark height. Do not add shadows, gradients, outlines or extra symbols to the logo.
+Use the primary asset on ivory or white and the reverse asset on forest green. The in-product logo follows the selected Theme studio palette using readable foreground/background pairs; its geometry stays the same. Keep the full signature at least 160px wide; use the mark alone below that size, with a minimum digital size of 24px. Browser icons use a simplified crest with stronger car outlines to remain recognizable at 16px. Preserve the aspect ratio and leave clear space at least equal to one quarter of the mark height. Do not add shadows, gradients, extra outlines or additional symbols to the logo.
+
+Run `node scripts/generate-brand-assets.mjs` after changing the shared geometry to regenerate the static SVG signatures, browser icons and logo preview together.
 
 ## Color
 

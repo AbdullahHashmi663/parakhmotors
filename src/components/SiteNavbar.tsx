@@ -47,7 +47,7 @@ export function SiteNavbar() {
       desktop: '(min-width: 1001px)',
       reduced: '(prefers-reduced-motion: reduce)',
     }, (context) => {
-      const { mobile, desktop, reduced } = context.conditions!;
+      const { mobile, reduced } = context.conditions!;
       reduceMotion.current = reduced;
       menuTimeline.current = null;
 
@@ -80,13 +80,6 @@ export function SiteNavbar() {
         panel.hidden = !isMenuOpen.current;
         panel.inert = !isMenuOpen.current;
         gsap.set(icon, { rotation: isMenuOpen.current ? 90 : 0 });
-      }
-
-      if (desktop && !reduced) {
-        gsap.from(element.querySelectorAll('[data-nav-item]'), {
-          opacity: 0, y: 7, duration: 0.45, stagger: 0.035, ease: 'power2.out',
-          clearProps: 'opacity,transform',
-        });
       }
 
       return () => { menuTimeline.current = null; };

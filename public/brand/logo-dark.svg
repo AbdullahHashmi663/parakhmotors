@@ -1,14 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="320" viewBox="0 0 300 106" fill="none" role="img" aria-labelledby="title desc">
-  <title id="title">Parakh Motors — reverse logo</title>
-  <desc id="desc">An interlocking PM monogram with an inspection check in sage and ivory, on forest green.</desc>
-  <rect width="300" height="106" fill="#153e35"/>
-  <g transform="translate(39 24)">
-    <rect x="2" y="2" width="54" height="54" rx="16" fill="#d7edaf"/>
-    <path d="M15 42V15H27A8 8 0 0 1 27 31H21" stroke="#153e35" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="round"/>
-    <path d="M27 42V28L34 35L44 25V42" stroke="#153e35" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="round"/>
-    <g fill="#f7f8f2" font-family="Arial, Helvetica, sans-serif">
-      <text x="71" y="29" font-size="23" font-weight="700" letter-spacing="2.4">PARAKH</text>
-      <text x="72" y="46" font-size="9.5" font-weight="500" letter-spacing="6.2">MOTORS</text>
-    </g>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="330" viewBox="0 0 320 110" fill="none" role="img" aria-labelledby="logo-title">
+<title id="logo-title">Parakh Motors — original automotive crest</title>
+<rect width="320" height="110" fill="#153e35"/>
+<g transform="translate(32 19)"><path d="M36 3 65 13V34C65 49 52 61 36 69 20 61 7 49 7 34V13L36 3Z" fill="#d7edaf"/>
+<path d="M36 8 60 16V34C60 46 49 56 36 63 23 56 12 46 12 34V16L36 8Z" stroke="#153e35" stroke-linecap="round" stroke-linejoin="round" stroke-width="0.8" opacity="0.45"/>
+<g stroke="#153e35" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+<path d="M20 30 24 22C25 20 29 19 36 19S47 20 48 22L52 30" />
+<path d="M20 30 16 33C15 34 14.5 35 14.5 37V42C14.5 45 16 47 19 47H53C56 47 57.5 45 57.5 42V37C57.5 35 57 34 56 33L52 30M20 30C29 32 43 32 52 30" />
+<path d="M24 28 27 23H45L48 28" stroke-width="1.25"/>
+<path d="M15 32H11M57 32H61M18 47V49M54 47V49M20 43H27M45 43H52" stroke-width="1.5"/>
+</g>
+<path d="M19 36 27 37.5 28 40H20L19 36Z" fill="#153e35"/>
+<path d="M53 36 45 37.5 44 40H52L53 36Z" fill="#153e35"/>
+<path d="M31 37.5H41L39 42H33L31 37.5Z" stroke="#153e35" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.1"/>
+<path d="M29 54H43" stroke="#153e35" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+<path d="M36 57 38 59 36 61 34 59 36 57Z" fill="#153e35"/>
+<g transform="translate(-6 0)" stroke="#f7f8f2" stroke-linecap="square" stroke-linejoin="miter">
+<path d="M100 38V15H110C118 15 118 29 110 29H100" stroke-width="2.3"/>
+<path d="M123 38 132 15 141 38M126 31H138" stroke-width="2.3"/>
+<path d="M151 38V15H162C170 15 170 29 162 29H151M160 29 169 38" stroke-width="2.3"/>
+<path d="M177 38 186 15 195 38M180 31H192" stroke-width="2.3"/>
+<path d="M205 15V38M221 15 205 29M211 24 222 38" stroke-width="2.3"/>
+<path d="M232 15V38M248 15V38M232 26.5H248" stroke-width="2.3"/>
+<path d="M138 58V49L142 53 146 49V58" stroke-width="1.2"/>
+<path d="M156 49C150 49 150 58 156 58S162 49 156 49Z" stroke-width="1.2"/>
+<path d="M165 49H174M169.5 49V58" stroke-width="1.2"/>
+<path d="M184 49C178 49 178 58 184 58S190 49 184 49Z" stroke-width="1.2"/>
+<path d="M194 58V49H198C204 49 204 54 198 54H194M198 54 203 58" stroke-width="1.2"/>
+<path d="M216 50C208 47 207 53 212 53S219 59 210 58" stroke-width="1.2"/>
+<path d="M100 53.5H126M228 53.5H248" stroke-width="0.7"/>
+</g></g>
 </svg>

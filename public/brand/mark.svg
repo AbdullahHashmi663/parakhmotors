@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 58 58" fill="none" role="img" aria-label="Parakh Motors PM mark">
-  <rect x="2" y="2" width="54" height="54" rx="16" fill="#153e35"/>
-  <path d="M15 42V15H27A8 8 0 0 1 27 31H21" stroke="#f7f8f2" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="round"/>
-  <path d="M27 42V28L34 35L44 25V42" stroke="#d7edaf" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 72 72" fill="none" role="img" aria-labelledby="mark-title">
+<title id="mark-title">Parakh Motors car crest</title>
+<path d="M36 3 65 13V34C65 49 52 61 36 69 20 61 7 49 7 34V13L36 3Z" fill="#153e35"/>
+<g stroke="#f7f8f2" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2">
+<path d="M20 30 24 22C25 20 29 19 36 19S47 20 48 22L52 30" />
+<path d="M20 30 16 33C15 34 14.5 35 14.5 37V42C14.5 45 16 47 19 47H53C56 47 57.5 45 57.5 42V37C57.5 35 57 34 56 33L52 30M20 30C29 32 43 32 52 30" />
+</g>
+<path d="M19 36 27 37.5 28 40H20L19 36Z" fill="#f7f8f2"/>
+<path d="M53 36 45 37.5 44 40H52L53 36Z" fill="#f7f8f2"/>
 </svg>

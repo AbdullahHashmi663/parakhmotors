@@ -3,7 +3,7 @@
 ## Delivered
 
 - Complete new homepage and eight customer pages: services, inspections, selling, car sourcing, about, contact, investor offers and privacy.
-- Custom geometric PM identity, SVG wordmark variants, browser favicon and Apple touch icon.
+- Custom automotive car crest, original SVG wordmark variants, browser favicon and Apple touch icon.
 - Original campaign photograph, optimized to WebP, and a local variable font.
 - Ivory, evergreen and lime semantic design tokens, responsive layouts, reduced-motion support and visible keyboard focus.
 - Searchable inventory with make, body and budget filters, a session shortlist, vehicle photo gallery and enquiry dialog.
@@ -27,3 +27,7 @@ See `brand-guidelines.md` for identity guidance and `image-assets.md` for the or
 Set `NEXT_PUBLIC_SITE_URL` to the actual deployment origin for social images. The site currently runs locally; it has not been published by this redesign task. Existing contact data is loaded from the saved dealership settings. Theme studio selections now control the public website and admin portal through semantic color tokens, including the in-product logo, forms, cards, and hover states. Saved selections persist in the database and refresh other open tabs.
 
 Text and action foregrounds are derived for readable contrast. Custom card backgrounds that conflict with the shared text color are gently blended toward the page background. Run `node scripts/verify-theme-tokens.mjs` to check body, secondary text, actions, inverse sections, and focus colors across the built-in and custom test palettes.
+
+## Page opening behavior
+
+Initial headings, navigation, hero images and admin content stay visible during hydration. Scroll reveals start only for committed content below the viewport, and their styles revert on navigation or keyboard focus. The homepage mounts once and loads inventory inside its collection section. Plain page openings and refreshes begin at the top; explicit section links retain their anchors.

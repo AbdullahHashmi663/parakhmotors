@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import Script from 'next/script';
 import { Suspense } from 'react';
 import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   title: { default: 'Parakh Motors | A better drive starts with trust.', template: '%s | Parakh Motors' },
   description: 'Buy, sell and find your next car with confidence. Independent 200+ point inspections, vehicle sourcing and personal deal support from Parakh Motors in Pakistan.',
   keywords: ['car inspection Pakistan', 'buy cars Lahore', 'sell my car', 'vehicle sourcing', 'Parakh Motors'],
-  icons: { icon: '/brand/mark.svg', apple: '/brand/apple-touch-icon.png' },
+  icons: { icon: '/brand/mark.svg?v=car-crest', apple: '/brand/apple-touch-icon.png?v=car-crest' },
   openGraph: { title: 'Parakh Motors | A better drive starts with trust.', description: 'Your next chapter, driven with confidence. Car inspections, buying, selling and sourcing in Pakistan.', images: [{ url: '/images/parakh-journey.webp', width: 1536, height: 1024, alt: 'Parakh Motors — a journey through the mountains of Pakistan' }], type: 'website', locale: 'en_PK', siteName: 'Parakh Motors' },
 };
 
@@ -65,11 +66,7 @@ ${themeTokensCss}
     >
       <head>
         <style id="pm-active-theme" dangerouslySetInnerHTML={{ __html: themeCss }} />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var c=localStorage.getItem('pm_cached_active_theme_v1');if(c){var t=JSON.parse(c);if(t&&t.id&&t.id!==${JSON.stringify(activeTheme.id)}){var r=document.documentElement;r.dataset.theme=t.id;if(t.background)r.style.setProperty('--background',t.background);if(t.foreground)r.style.setProperty('--foreground',t.foreground);if(t.card_bg)r.style.setProperty('--card-bg',t.card_bg);if(t.border_color)r.style.setProperty('--border-color',t.border_color);if(t.primary)r.style.setProperty('--primary',t.primary);if(t.accent)r.style.setProperty('--accent',t.accent);if(t.glow_color)r.style.setProperty('--glow-color',t.glow_color);}}}catch(e){}})();`,
-          }}
-        />
+        <Script id="pm-page-opening" strategy="beforeInteractive">{"if('scrollRestoration' in history){history.scrollRestoration='manual'}if(!location.hash){window.scrollTo({top:0,left:0,behavior:'instant'})}"}</Script>
       </head>
       <body>
         <Suspense fallback={null}>

@@ -32,8 +32,23 @@
   --font-sans: var(--font-geist), Arial, Helvetica, sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 130px; }
-body { margin: 0; color: var(--pm-ink); background: var(--pm-paper); font-family: var(--font-sans); font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 130px;
+  overflow-x: clip;
+}
+body {
+  margin: 0;
+  overflow-x: clip;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  color: var(--pm-ink);
+  background: var(--pm-paper);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
 ::selection { background: var(--pm-lime); color: var(--pm-accent-text); }
 h1, h2, h3, h4, p { margin: 0; }
 h1, h2, h3, h4 { line-height: 1.15; }

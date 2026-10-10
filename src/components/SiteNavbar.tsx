@@ -93,9 +93,14 @@ export function SiteNavbar() {
     });
 
     let frame = 0;
+    let lastScrolled: boolean | null = null;
     const updateShadow = () => {
       frame = 0;
-      element.dataset.scrolled = String(window.scrollY > 24);
+      const isScrolled = window.scrollY > 28;
+      if (lastScrolled !== isScrolled) {
+        lastScrolled = isScrolled;
+        element.dataset.scrolled = String(isScrolled);
+      }
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(updateShadow); };
     updateShadow();

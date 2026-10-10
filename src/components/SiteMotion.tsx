@@ -7,6 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { animate, type AnimationParams } from 'animejs';
 
 gsap.registerPlugin(ScrollTrigger);
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 type MotionRecord = { context: gsap.Context; entrance?: gsap.core.Tween; responsive?: gsap.MatchMedia };
 
@@ -20,17 +21,18 @@ export function SiteMotion() {
     media.add('(prefers-reduced-motion: no-preference)', () => {
       const records = new Map<Element, MotionRecord>();
       const feedback = new Map<Element, ReturnType<typeof animate>>();
-      let refreshFrame = 0;
+      let refreshTimer: number = 0;
       let accordionTimer = 0;
       let disposed = false;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
       const readyScene = (element: Element) => element.closest('[data-motion-scene][data-motion-ready="true"]');
       const revertRecord = (record: MotionRecord) => { record.responsive?.revert(); record.context.revert(); };
 
       const refresh = () => {
-        window.cancelAnimationFrame(refreshFrame);
-        refreshFrame = window.requestAnimationFrame(() => {
+        window.clearTimeout(refreshTimer);
+        refreshTimer = window.setTimeout(() => {
           if (!disposed) ScrollTrigger.refresh();
-        });
+        }, 120);
       };
 
       const reveal = (element: Element, kind: string, delay = 0, immediate = false) => {
@@ -59,11 +61,17 @@ export function SiteMotion() {
               });
             });
           } else if (kind === 'image') {
-            entrance = gsap.fromTo(element,
-              { opacity: 0, clipPath: 'inset(0% 0% 18% 0% round 6px)' },
-              { opacity: 1, clipPath: 'inset(0% 0% 0% 0% round 6px)',
-                duration: 1.05, delay, ease: 'power3.out', scrollTrigger: trigger,
-                clearProps: 'opacity,clipPath' });
+            if (isMobile) {
+              entrance = gsap.fromTo(element,
+                { opacity: 0, y: 16 },
+                { opacity: 1, y: 0, duration: 0.65, delay, ease: 'power2.out', scrollTrigger: trigger, clearProps: 'opacity,transform', force3D: true });
+            } else {
+              entrance = gsap.fromTo(element,
+                { opacity: 0, clipPath: 'inset(0% 0% 18% 0% round 6px)' },
+                { opacity: 1, clipPath: 'inset(0% 0% 0% 0% round 6px)',
+                  duration: 1.05, delay, ease: 'power3.out', scrollTrigger: trigger,
+                  clearProps: 'opacity,clipPath', force3D: true });
+            }
             const image = element.querySelector('img');
             if (image) {
               responsive = gsap.matchMedia();
@@ -76,11 +84,12 @@ export function SiteMotion() {
             }
           } else {
             entrance = gsap.from(element, {
-              opacity: 0, y: kind === 'heading' ? 30 : 22,
-              duration: kind === 'heading' ? 0.9 : 0.72,
+              opacity: 0, y: kind === 'heading' ? (isMobile ? 18 : 30) : (isMobile ? 14 : 22),
+              duration: kind === 'heading' ? (isMobile ? 0.6 : 0.9) : (isMobile ? 0.5 : 0.72),
               delay: aboveViewport ? 0 : delay,
               ease: 'power3.out', scrollTrigger: trigger,
               clearProps: 'opacity,transform',
+              force3D: true,
             });
           }
         }, element);
@@ -192,7 +201,7 @@ export function SiteMotion() {
       return () => {
         disposed = true;
         observer.disconnect();
-        window.cancelAnimationFrame(refreshFrame);
+        window.clearTimeout(refreshTimer);
         window.clearTimeout(accordionTimer);
         document.removeEventListener('pointerdown', onPointerDown);
         document.removeEventListener('click', onClick);

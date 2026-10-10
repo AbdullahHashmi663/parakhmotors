@@ -159,13 +159,13 @@ export function ForensicInspectionHUD() {
                 onMouseEnter={() => setActiveCheckpoint(cp)}
                 onClick={() => setActiveCheckpoint(cp)}
                 style={{ top: `${cp.y}%`, left: `${cp.x}%` }}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 group focus:outline-none transition-all ${
+                className={`absolute -translate-x-1/2 -translate-y-1/2 group focus:outline-none transition-all transform-gpu will-change-transform ${
                   isActive ? 'scale-125 z-30' : 'hover:scale-110 z-20'
                 }`}
               >
                 {/* Pulsing ring */}
                 <span
-                  className={`absolute inset-0 rounded-full animate-ping opacity-75 ${
+                  className={`absolute inset-0 rounded-full animate-ping opacity-75 transform-gpu ${
                     isActive ? 'bg-[var(--primary)]' : 'bg-[var(--border-color)]'
                   }`}
                 />

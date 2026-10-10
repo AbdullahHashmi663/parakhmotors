@@ -1,6 +1,6 @@
 .wrapper {
   position: fixed;
-  left: 24px;
+  right: 24px;
   bottom: 24px;
   z-index: 990;
   display: flex;
@@ -91,7 +91,7 @@
 
 .label {
   position: absolute;
-  left: calc(100% + 12px);
+  right: calc(100% + 12px);
   white-space: nowrap;
   background: var(--pm-inverse-bg, #0c201c);
   color: #ffffff;
@@ -102,7 +102,7 @@
   border-radius: 20px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
   opacity: 0;
-  transform: translateX(-8px) scale(0.95);
+  transform: translateX(8px) scale(0.95);
   transition: opacity 0.2s ease, transform 0.2s ease;
   pointer-events: none;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -112,11 +112,11 @@
   content: '';
   position: absolute;
   top: 50%;
-  left: -5px;
+  right: -5px;
   transform: translateY(-50%);
-  border-width: 5px 5px 5px 0;
+  border-width: 5px 0 5px 5px;
   border-style: solid;
-  border-color: transparent var(--pm-inverse-bg, #0c201c) transparent transparent;
+  border-color: transparent transparent transparent var(--pm-inverse-bg, #0c201c);
 }
 
 .button:hover .label {
@@ -126,7 +126,7 @@
 
 @media (max-width: 768px) {
   .wrapper {
-    left: calc(16px + env(safe-area-inset-left, 0px));
+    right: calc(16px + env(safe-area-inset-right, 0px));
     bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 

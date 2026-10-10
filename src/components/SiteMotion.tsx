@@ -44,22 +44,55 @@ export function SiteMotion() {
               mobileObserver?.unobserve(target);
               const delay = parseFloat(target.dataset.motionDelay || '0');
               const kind = target.dataset.motionKind || 'reveal';
-              gsap.fromTo(target,
-                { opacity: 0, y: kind === 'heading' ? 22 : 16 },
-                {
-                  opacity: 1,
-                  y: 0,
-                  duration: kind === 'heading' ? 0.65 : 0.5,
-                  delay,
-                  ease: 'power2.out',
-                  clearProps: 'opacity,transform',
-                  force3D: true,
-                }
-              );
+
+              if (kind === 'draw') {
+                gsap.to(target, { opacity: 1, duration: 0.35, clearProps: 'opacity' });
+                const paths = target.querySelectorAll<SVGGeometryElement>('path:not([fill]), path[fill="none"], circle:not([fill])');
+                paths.forEach((path, index) => {
+                  const length = path.getTotalLength();
+                  gsap.fromTo(path,
+                    { strokeDasharray: length, strokeDashoffset: length },
+                    {
+                      strokeDashoffset: 0,
+                      duration: 1.1,
+                      delay: delay + index * 0.05,
+                      ease: 'power2.inOut',
+                      clearProps: 'strokeDasharray,strokeDashoffset',
+                    }
+                  );
+                });
+              } else if (kind === 'image') {
+                gsap.fromTo(target,
+                  { opacity: 0, y: 18, scale: 0.98 },
+                  {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    duration: 0.65,
+                    delay,
+                    ease: 'power2.out',
+                    clearProps: 'opacity,transform',
+                    force3D: true,
+                  }
+                );
+              } else {
+                gsap.fromTo(target,
+                  { opacity: 0, y: kind === 'heading' ? 22 : 16 },
+                  {
+                    opacity: 1,
+                    y: 0,
+                    duration: kind === 'heading' ? 0.65 : 0.5,
+                    delay,
+                    ease: 'power2.out',
+                    clearProps: 'opacity,transform',
+                    force3D: true,
+                  }
+                );
+              }
             }
           });
         }, {
-          rootMargin: '0px 0px -6% 0px',
+          rootMargin: '0px 0px -40px 0px',
           threshold: 0.05,
         });
       }
@@ -67,8 +100,14 @@ export function SiteMotion() {
       const reveal = (element: Element, kind: string, delay = 0, immediate = false) => {
         if (records.has(element) || !element.getClientRects().length) return;
         if (isMobile) {
-          const aboveViewport = element.getBoundingClientRect().bottom < 0;
-          if (aboveViewport || immediate || kind === 'hero') {
+          const rect = element.getBoundingClientRect();
+          const aboveViewport = rect.bottom < 0;
+          if (aboveViewport) {
+            gsap.set(element, { opacity: 1, clearProps: 'opacity,transform' });
+            records.set(element, { context: gsap.context(() => {}) });
+            return;
+          }
+          if (immediate || kind === 'hero') {
             const context = gsap.context(() => {
               const entrance = gsap.fromTo(element,
                 { opacity: 0, y: 14 },
@@ -79,10 +118,16 @@ export function SiteMotion() {
               );
               records.set(element, { context, entrance });
             }, element);
-          } else if (mobileObserver && element instanceof HTMLElement) {
-            element.dataset.motionDelay = String(delay);
-            element.dataset.motionKind = kind;
-            gsap.set(element, { opacity: 0, y: kind === 'heading' ? 22 : 16, force3D: true });
+            return;
+          }
+          if (mobileObserver && (element instanceof HTMLElement || element instanceof SVGElement)) {
+            element.setAttribute('data-motion-delay', String(delay));
+            element.setAttribute('data-motion-kind', kind);
+            if (kind === 'draw') {
+              gsap.set(element, { opacity: 0 });
+            } else {
+              gsap.set(element, { opacity: 0, y: kind === 'heading' ? 22 : 16, force3D: true });
+            }
             mobileObserver.observe(element);
             records.set(element, { context: gsap.context(() => {}) });
           }
@@ -228,8 +273,14 @@ export function SiteMotion() {
       const onFocus = (event: FocusEvent) => {
         if (event.target instanceof Element) settleFocusedContent(event.target);
       };
-      const observer = new MutationObserver(() => { discover(); refresh(); });
-      const onSceneReady = () => { discover(); refresh(); };
+      const observer = new MutationObserver(() => {
+        discover();
+        if (!isMobile) refresh();
+      });
+      const onSceneReady = () => {
+        discover();
+        if (!isMobile) refresh();
+      };
 
       const progressContext = gsap.context(() => {
         if (progress.current && !isMobile) gsap.fromTo(progress.current, { scaleX: 0 }, {
@@ -238,7 +289,7 @@ export function SiteMotion() {
         });
       });
       discover();
-      if (!isMobile) observer.observe(document.body, { childList: true, subtree: true });
+      observer.observe(document.body, { childList: true, subtree: true });
       document.addEventListener('pointerdown', onPointerDown);
       document.addEventListener('click', onClick);
       document.addEventListener('change', onChange);

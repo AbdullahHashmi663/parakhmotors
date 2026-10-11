@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent, type InputHTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent, type InputHTMLAttributes, type ReactNode } from 'react';
 import { animate, createScope } from 'animejs';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, CircleAlert, LockKeyhole } from 'lucide-react';
@@ -15,17 +15,20 @@ import SellPhotoUpload from './SellPhotoUpload';
 type FormKind = 'inspection' | 'sell' | 'finder' | 'investor' | 'contact';
 
 export function CustomerField({ name, label, hint, full, ...props }: InputHTMLAttributes<HTMLInputElement> & { name: string; label: string; hint?: string; full?: boolean }) {
+  const id = useId();
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => { if (props.type === 'date' && input.current) input.current.min = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Karachi', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }, [props.type]);
-  return <div data-motion-item className={`${s.field} ${full ? s.full : ''}`}><label htmlFor={`customer-${name}`}>{label}{props.required ? ' *' : ''}</label><input ref={input} id={`customer-${name}`} name={name} aria-describedby={hint ? `hint-${name}` : undefined} {...props} />{hint && <small id={`hint-${name}`}>{hint}</small>}</div>;
+  return <div data-motion-item className={`${s.field} ${full ? s.full : ''}`}><label htmlFor={id}>{label}{props.required ? ' *' : ''}</label><input ref={input} id={id} name={name} aria-describedby={hint ? `${id}-hint` : undefined} {...props} />{hint && <small id={`${id}-hint`}>{hint}</small>}</div>;
 }
 
 function SelectField({ name, label, options, full, defaultValue, required }: { name: string; label: string; options: { value: string; label: string }[]; full?: boolean; defaultValue?: string; required?: boolean }) {
-  return <div data-motion-item className={`${s.field} ${full ? s.full : ''}`}><label htmlFor={`customer-${name}`}>{label}{required ? ' *' : ''}</label><select id={`customer-${name}`} name={name} defaultValue={defaultValue} required={required}>{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>;
+  const id = useId();
+  return <div data-motion-item className={`${s.field} ${full ? s.full : ''}`}><label htmlFor={id}>{label}{required ? ' *' : ''}</label><select id={id} name={name} defaultValue={defaultValue} required={required}>{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>;
 }
 
 function TextField({ name, label, placeholder, required }: { name: string; label: string; placeholder?: string; required?: boolean }) {
-  return <div data-motion="reveal" className={`${s.field} ${s.full}`}><label htmlFor={`customer-${name}`}>{label}{required ? ' *' : ''}</label><textarea name={name} id={`customer-${name}`} rows={4} placeholder={placeholder} required={required} /></div>;
+  const id = useId();
+  return <div data-motion="reveal" className={`${s.field} ${s.full}`}><label htmlFor={id}>{label}{required ? ' *' : ''}</label><textarea name={name} id={id} rows={4} placeholder={placeholder} required={required} /></div>;
 }
 
 function FieldGroup({ title, children }: { title: string; children: ReactNode }) {
@@ -34,7 +37,7 @@ function FieldGroup({ title, children }: { title: string; children: ReactNode })
 
 const conditionOptions = [{ value: 'excellent', label: 'Excellent' }, { value: 'good', label: 'Good' }, { value: 'fair', label: 'Fair' }, { value: 'needs_work', label: 'Needs work' }];
 const submitLabels: Record<FormKind, string> = { inspection: 'Request an inspection', sell: 'Submit my car', finder: 'Start my car search', investor: 'Request a cash offer', contact: 'Send my inquiry' };
-export function CustomerRequestForm({ kind, selectedPackage, onPackageChange }: { kind: FormKind; selectedPackage?: string; onPackageChange?: (value: string) => void }) {
+export function CustomerRequestForm({ id, kind, selectedPackage, onPackageChange }: { id?: string; kind: FormKind; selectedPackage?: string; onPackageChange?: (value: string) => void }) {
   const contact = useDealershipSettings();
   const content = contact.websiteContent;
   const text = (value: string) => resolveContentText(value, contact);
@@ -117,7 +120,7 @@ export function CustomerRequestForm({ kind, selectedPackage, onPackageChange }: 
     }
   }
 
-  return <div className={s.formCard}><p data-motion="reveal">Fields marked * are required.</p>{(success || error) && <div ref={statusRef} tabIndex={-1} className={`${s.status} ${error ? s.error : ''}`} role={error ? 'alert' : 'status'}>{error ? <CircleAlert size={19} aria-hidden="true" /> : <CheckCircle2 size={19} aria-hidden="true" />}<span>{error || success}</span></div>}<form onSubmit={submit} className={s.form} aria-busy={loading}>
+  return <div id={id} className={s.formCard}><p data-motion="reveal">Fields marked * are required.</p>{(success || error) && <div ref={statusRef} tabIndex={-1} className={`${s.status} ${error ? s.error : ''}`} role={error ? 'alert' : 'status'}>{error ? <CircleAlert size={19} aria-hidden="true" /> : <CheckCircle2 size={19} aria-hidden="true" />}<span>{error || success}</span></div>}<form onSubmit={submit} className={s.form} aria-busy={loading}>
     {(kind === 'inspection' || kind === 'sell') && <fieldset><legend data-motion="reveal">Choose your service</legend><div data-motion="stagger" className={s.choices}>{choices.map(option => <label data-motion-item data-motion-feedback="choice" key={option.id} className={`${s.choice} ${resolvedPackage?.id === option.id ? s.selected : ''}`}><input type="radio" name="package" value={option.id} checked={resolvedPackage?.id === option.id} onChange={() => choosePackage(option.id)} required /><div><strong>{text(option.title)}</strong><span>{option.kind === 'investor' ? text(option.paymentNote || 'Discuss with our team') : formatServicePrice(option.price)}</span>{option.paymentNote && option.kind !== 'investor' && <span>{text(option.paymentNote)}</span>}</div></label>)}</div></fieldset>}
     {kind !== 'contact' && <FieldGroup title={kind === 'finder' ? 'Your ideal car' : 'Vehicle details'}><CustomerField name="brand" label={kind === 'sell' ? 'Vehicle name' : 'Make / brand'} placeholder={kind === 'sell' ? 'e.g. Toyota Corolla' : 'e.g. Toyota'} required />{kind !== 'sell' && <CustomerField name="model" label={kind === 'finder' ? 'Model / options' : 'Model'} placeholder={kind === 'finder' ? 'e.g. Fortuner, Prado' : 'e.g. Corolla Altis'} required />}<CustomerField name="year" label={kind === 'finder' ? 'Earliest model year' : 'Model year'} type="number" min="1960" max="2027" placeholder="e.g. 2022" required /><CustomerField name="variant" label="Variant" placeholder="e.g. Grande 1.8" />
       {(kind === 'sell' || kind === 'investor') && <><CustomerField name="mileage" label="Mileage (km)" type="number" min="0" max="2000000" placeholder="e.g. 45000" required /><CustomerField name="price" label="Asking price (PKR)" type="number" min="1" placeholder="e.g. 4500000" required /><CustomerField name="color" label="Colour" placeholder="e.g. Silver" /><SelectField name="transmission" label="Transmission" options={[{ value: 'automatic', label: 'Automatic' }, { value: 'manual', label: 'Manual' }]} />{kind === 'investor' && <><SelectField name="paint" label="Paint / body condition" options={conditionOptions} /><SelectField name="engine" label="Engine condition" options={conditionOptions} /></>}<CustomerField name="registrationYear" label="Registration year" type="number" min="1960" max="2027" placeholder="e.g. 2022" /><CustomerField name="registrationCity" label="Registration city" placeholder="e.g. Lahore" /></>}

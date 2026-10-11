@@ -124,7 +124,42 @@ class DataStore {
   getVehicles() { return list<Vehicle>('vehicles', vehicleFields); }
   getVehicleById(id: string) { return get<Vehicle>('vehicles', vehicleFields, id); }
   createVehicle(value: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) { return insert<Vehicle>('vehicles', vehicleFields, 'pm-veh', value); }
+  async createVehicleWithPhotos(value: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>, photos: ProcessedSellPhoto[]): Promise<Vehicle> {
+    return databaseTransaction(async (db) => {
+      const vehicle = await insert<Vehicle>('vehicles', vehicleFields, 'pm-veh', value, db);
+      const images = [...value.images];
+      for (const [position, photo] of photos.entries()) {
+        const id = randomUUID();
+        await db.query('INSERT INTO public.vehicle_photos (id, vehicle_id, image_data, mime_type, width, height, size, position) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [id, vehicle.id, photo.data, photo.mimeType, photo.width, photo.height, photo.size, position]);
+        images.push(`/api/vehicles/${encodeURIComponent(vehicle.id)}/photos/${encodeURIComponent(id)}`);
+      }
+      return await update<Vehicle>('vehicles', vehicleFields, vehicle.id, { images }, db) ?? vehicle;
+    });
+  }
   updateVehicle(id: string, value: Partial<Vehicle>) { return update<Vehicle>('vehicles', vehicleFields, id, value); }
+  async updateVehicleWithPhotos(id: string, value: Partial<Vehicle>, photos: ProcessedSellPhoto[]): Promise<Vehicle | null> {
+    return databaseTransaction(async (db) => {
+      const current = await get<Vehicle>('vehicles', vehicleFields, id, db);
+      if (!current) return null;
+      const images = [...(value.images ?? current.images)];
+      for (const [position, photo] of photos.entries()) {
+        const photoId = randomUUID();
+        await db.query('INSERT INTO public.vehicle_photos (id, vehicle_id, image_data, mime_type, width, height, size, position) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [photoId, id, photo.data, photo.mimeType, photo.width, photo.height, photo.size, position]);
+        images.push(`/api/vehicles/${encodeURIComponent(id)}/photos/${encodeURIComponent(photoId)}`);
+      }
+      const updated = await update<Vehicle>('vehicles', vehicleFields, id, { ...value, images }, db);
+      if (updated) {
+        const usedPhotoIds = updated.images.map((image) => image.match(new RegExp(`^/api/vehicles/${id}/photos/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$`, 'i'))?.[1]).filter((photoId): photoId is string => Boolean(photoId));
+        if (usedPhotoIds.length) await db.query('DELETE FROM public.vehicle_photos WHERE vehicle_id = $1 AND NOT (id = ANY($2::uuid[]))', [id, usedPhotoIds]);
+        else await db.query('DELETE FROM public.vehicle_photos WHERE vehicle_id = $1', [id]);
+      }
+      return updated;
+    });
+  }
+  async getVehiclePhoto(vehicleId: string, photoId: string): Promise<{ data: Buffer; mimeType: 'image/webp' } | undefined> {
+    const result = await getDatabasePool().query('SELECT image_data, mime_type FROM public.vehicle_photos WHERE vehicle_id = $1 AND id = $2::uuid', [vehicleId, photoId]);
+    return result.rows[0] ? { data: result.rows[0].image_data as Buffer, mimeType: 'image/webp' } : undefined;
+  }
   deleteVehicle(id: string) { return remove('vehicles', id); }
   getInspections() { return list<InspectionBooking>('inspections', inspectionFields); }
   getInspectionById(id: string) { return get<InspectionBooking>('inspections', inspectionFields, id); }

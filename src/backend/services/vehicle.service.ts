@@ -2,6 +2,7 @@ import { dataStore } from '../repositories/data-store';
 import { ApiError } from '../utils/api-error';
 import { enumField, numberField, resourceId, textField } from '../utils/validation';
 import type { Vehicle, VehicleQueryParams } from '@/types';
+import type { ProcessedSellPhoto } from '../utils/sell-photo-upload';
 
 const bodyTypes = ['sedan', 'suv', 'crossover', 'hatchback', 'coupe'] as const;
 const fuelTypes = ['petrol', 'diesel', 'hybrid', 'electric'] as const;
@@ -86,12 +87,19 @@ export class VehicleService {
     return vehicle;
   }
 
-  static async createVehicle(raw: Record<string, unknown>) {
-    return await dataStore.createVehicle(vehicleFields(raw, false) as Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>);
+  static async createVehicle(raw: Record<string, unknown>, photos: ProcessedSellPhoto[] = []) {
+    const value = vehicleFields(raw, false) as Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>;
+    if (value.images.length + photos.length > 20) throw ApiError.badRequest('Use no more than 20 image links and uploaded photos together');
+    return photos.length ? dataStore.createVehicleWithPhotos(value, photos) : dataStore.createVehicle(value);
   }
 
-  static async updateVehicle(id: string, raw: Record<string, unknown>) {
-    const updated = await dataStore.updateVehicle(resourceId(id), vehicleFields(raw, true));
+  static async updateVehicle(id: string, raw: Record<string, unknown>, photos: ProcessedSellPhoto[] = []) {
+    const validId = resourceId(id);
+    const fields = vehicleFields(raw, true);
+    if ((fields.images?.length ?? 0) + photos.length > 20) throw ApiError.badRequest('Use no more than 20 image links and uploaded photos together');
+    const updated = photos.length || 'images' in fields
+      ? await dataStore.updateVehicleWithPhotos(validId, fields, photos)
+      : await dataStore.updateVehicle(validId, fields);
     if (!updated) throw ApiError.notFound('Vehicle not found');
     return updated;
   }

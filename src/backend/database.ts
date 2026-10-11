@@ -25,8 +25,11 @@ export function getDatabasePool(): Pool {
         : readFileSync(path.join(process.cwd(), 'supabase', 'certs', 'prod-ca-2021.crt'), 'utf8'),
     },
     max: 5,
-    connectionTimeoutMillis: 8000,
-    idleTimeoutMillis: 10000,
+    // Allow a slower pooler handshake and reuse connections between page interactions.
+    connectionTimeoutMillis: 20000,
+    idleTimeoutMillis: 60000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
     query_timeout: 15000,
     application_name: 'parakh-motors',
     allowExitOnIdle: true,

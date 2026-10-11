@@ -69,6 +69,14 @@ function fetcher<T>(endpoint: string, options?: RequestInit): Promise<ApiRespons
   return requestJson<ApiResponse<T>>(endpoint, options);
 }
 
+function vehicleRequestBody(data: object, photos: File[] = []): string | FormData {
+  if (!photos.length) return JSON.stringify(data);
+  const form = new FormData();
+  form.set('details', JSON.stringify(data));
+  photos.forEach((photo) => form.append('photos', photo));
+  return form;
+}
+
 export const api = {
   health: {
     check: () => requestJson<{ success: boolean; status?: string }>('/api/health'),
@@ -90,16 +98,16 @@ export const api = {
 
     getById: (id: string) => fetcher<Vehicle>(`/api/vehicles/${id}`),
 
-    create: (data: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) =>
+    create: (data: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>, photos: File[] = []) =>
       fetcher<Vehicle>('/api/vehicles', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: vehicleRequestBody(data, photos),
       }),
 
-    update: (id: string, updates: Partial<Vehicle>) =>
+    update: (id: string, updates: Partial<Vehicle>, photos: File[] = []) =>
       fetcher<Vehicle>(`/api/vehicles/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(updates),
+        body: vehicleRequestBody(updates, photos),
       }),
 
     delete: (id: string) =>

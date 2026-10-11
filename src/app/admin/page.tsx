@@ -6,6 +6,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { MotionScene } from '@/components/MotionScene';
 import { AdminWebsiteEditor } from '@/components/AdminWebsiteEditor';
 import { SellRequestPhotos } from '@/components/SellRequestPhotos';
+import { AdminVehiclePhotoUpload } from '@/components/AdminVehiclePhotoUpload';
 import styles from './admin.module.css';
 import Link from 'next/link';
 import { VehicleImage } from '@/components/VehicleImage';
@@ -144,23 +145,23 @@ function AdminExperience() {
     title: '',
     brand: '',
     model: '',
-    year: 2023,
-    price: 35000000,
-    mileage: 15000,
-    fuelType: 'petrol' as Vehicle['fuelType'],
-    transmission: 'automatic' as Vehicle['transmission'],
-    bodyType: 'sedan' as Vehicle['bodyType'],
-    condition: 'certified_pre_owned' as Vehicle['condition'],
-    inspectionScore: 98,
-    color: 'Deep Metallic Obsidian',
-    location: 'Lahore, Punjab',
-    status: 'available' as Vehicle['status'],
-    featured: true,
-    images: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1200&q=80',
-    features:
-      'Panoramic Glass Sunroof, Ambient Lighting, 360 Camera, Adaptive Suspension',
-    description: 'Immaculate certified luxury automobile with clean history.',
+    year: '',
+    price: '',
+    mileage: '',
+    fuelType: '' as Vehicle['fuelType'] | '',
+    transmission: '' as Vehicle['transmission'] | '',
+    bodyType: '' as Vehicle['bodyType'] | '',
+    condition: '' as Vehicle['condition'] | '',
+    inspectionScore: '',
+    color: '',
+    location: '',
+    status: '' as Vehicle['status'] | '',
+    featured: false,
+    images: '',
+    features: '',
+    description: '',
   });
+  const [vehiclePhotos, setVehiclePhotos] = useState<File[]>([]);
 
   // Custom Theme Form
   const [customThemeForm, setCustomThemeForm] = useState({
@@ -371,25 +372,12 @@ function AdminExperience() {
     setEditingVehicle(null);
     setVehicleFormData({
       title: '',
-      brand: 'Mercedes-Benz',
+      brand: '',
       model: '',
-      year: 2023,
-      price: 35000000,
-      mileage: 15000,
-      fuelType: 'petrol',
-      transmission: 'automatic',
-      bodyType: 'sedan',
-      condition: 'certified_pre_owned',
-      inspectionScore: 98,
-      color: 'Obsidian Black',
-      location: 'Lahore, Punjab',
-      status: 'available',
-      featured: true,
-      images:
-        'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1200&q=80',
-      features: 'Panoramic Sunroof, 360 Camera, Burmester Audio',
-      description: 'Exceptional luxury sedan in pristine certified condition.',
+      year: '', price: '', mileage: '', fuelType: '', transmission: '', bodyType: '', condition: '',
+      inspectionScore: '', color: '', location: '', status: '', featured: false, images: '', features: '', description: '',
     });
+    setVehiclePhotos([]);
     setIsVehicleModalOpen(true);
   };
 
@@ -399,14 +387,14 @@ function AdminExperience() {
       title: veh.title,
       brand: veh.brand,
       model: veh.model,
-      year: veh.year,
-      price: veh.price,
-      mileage: veh.mileage,
+      year: String(veh.year),
+      price: String(veh.price),
+      mileage: String(veh.mileage),
       fuelType: veh.fuelType,
       transmission: veh.transmission,
       bodyType: veh.bodyType,
       condition: veh.condition,
-      inspectionScore: veh.inspectionScore,
+      inspectionScore: String(veh.inspectionScore),
       color: veh.color,
       location: veh.location,
       status: veh.status,
@@ -415,6 +403,7 @@ function AdminExperience() {
       features: veh.features.join(', '),
       description: veh.description,
     });
+    setVehiclePhotos([]);
     setIsVehicleModalOpen(true);
   };
 
@@ -438,31 +427,26 @@ function AdminExperience() {
         model: vehicleFormData.model,
         year: Number(vehicleFormData.year),
         price: Number(vehicleFormData.price),
-        mileage: Number(vehicleFormData.mileage),
-        fuelType: vehicleFormData.fuelType,
-        transmission: vehicleFormData.transmission,
-        bodyType: vehicleFormData.bodyType,
-        condition: vehicleFormData.condition,
-        inspectionScore: Number(vehicleFormData.inspectionScore),
+        mileage: Number(vehicleFormData.mileage) || 0,
+        fuelType: vehicleFormData.fuelType || 'petrol',
+        transmission: vehicleFormData.transmission || 'automatic',
+        bodyType: vehicleFormData.bodyType || 'sedan',
+        condition: vehicleFormData.condition || 'used',
+        inspectionScore: Number(vehicleFormData.inspectionScore) || 0,
         color: vehicleFormData.color,
         location: vehicleFormData.location,
-        status: vehicleFormData.status,
+        status: vehicleFormData.status || 'available',
         featured: Boolean(vehicleFormData.featured),
-        images:
-          imagesArray.length > 0
-            ? imagesArray
-            : [
-                'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1200&q=80',
-              ],
+        images: imagesArray,
         features: featuresArray,
         description: vehicleFormData.description,
       };
 
       if (editingVehicle) {
-        await api.vehicles.update(editingVehicle.id, payload);
+        await api.vehicles.update(editingVehicle.id, payload, vehiclePhotos);
         showNotification(`Vehicle "${payload.title}" updated successfully`);
       } else {
-        await api.vehicles.create(payload);
+        await api.vehicles.create(payload, vehiclePhotos);
         showNotification(`New vehicle "${payload.title}" added to inventory`);
       }
 
@@ -748,8 +732,8 @@ function AdminExperience() {
     {notification && <div ref={toast} className={`${styles.toast} ${notification.type === 'error' ? styles.toastError : ''}`} role={notification.type === 'error' ? 'alert' : 'status'}>{notification.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}<span>{notification.message}</span><button data-motion-press onClick={() => setNotification(null)} aria-label="Dismiss notification"><X size={17} /></button></div>}
     <dialog ref={vehicleDialog} className={styles.dialog} aria-labelledby="vehicle-dialog-title" onCancel={(event) => { event.preventDefault(); closeVehicleDialog(); }} onClick={(e) => { if (e.target === e.currentTarget) closeVehicleDialog(); }}>
       <div className={styles.dialogHeader}><div><span className={styles.eyebrow}>THE PARAKH COLLECTION</span><h2 id="vehicle-dialog-title">{editingVehicle ? 'Refine the details.' : 'A new addition.'}</h2><p>{editingVehicle ? 'Update this vehicle’s information and listing.' : 'Give your next great car a place in the showroom.'}</p></div><button data-motion-press className={styles.iconButton} onClick={() => closeVehicleDialog()} disabled={isSaving} aria-label="Close vehicle form"><X size={20} /></button></div>
-      <form onSubmit={handleSaveVehicle} className={styles.vehicleForm}><div className={styles.formGrid}><Field label="Listing title *" wide><input className={styles.control} required placeholder="e.g. Mercedes-Benz E200 AMG Line" value={vehicleFormData.title} onChange={(e) => setVehicleFormData({ ...vehicleFormData, title: e.target.value })} /></Field><Field label="Make *"><input className={styles.control} required placeholder="e.g. Toyota" value={vehicleFormData.brand} onChange={(e) => setVehicleFormData({ ...vehicleFormData, brand: e.target.value })} /></Field><Field label="Model *"><input className={styles.control} required placeholder="e.g. Corolla" value={vehicleFormData.model} onChange={(e) => setVehicleFormData({ ...vehicleFormData, model: e.target.value })} /></Field>{([['year', 'Model year *', 1900, 2030], ['price', 'Price (PKR) *', 1, undefined], ['mileage', 'Mileage (km)', 0, undefined], ['inspectionScore', 'Inspection score (0–100)', 0, 100]] as const).map(([key, label, min, max]) => <Field key={key} label={label}><input className={styles.control} type="number" required={key === 'year' || key === 'price'} min={min} max={max} value={vehicleFormData[key]} onChange={(e) => setVehicleFormData({ ...vehicleFormData, [key]: Number(e.target.value) })} /></Field>)}
-        <Field label="Fuel type"><select className={styles.control} value={vehicleFormData.fuelType} onChange={(e) => setVehicleFormData({ ...vehicleFormData, fuelType: e.target.value as Vehicle['fuelType'] })}>{['petrol', 'diesel', 'hybrid', 'electric'].map((value) => <option key={value} value={value}>{readable(value)}</option>)}</select></Field><Field label="Transmission"><select className={styles.control} value={vehicleFormData.transmission} onChange={(e) => setVehicleFormData({ ...vehicleFormData, transmission: e.target.value as Vehicle['transmission'] })}>{['automatic', 'manual'].map((value) => <option key={value} value={value}>{readable(value)}</option>)}</select></Field><Field label="Body style"><select className={styles.control} value={vehicleFormData.bodyType} onChange={(e) => setVehicleFormData({ ...vehicleFormData, bodyType: e.target.value as Vehicle['bodyType'] })}>{['sedan', 'suv', 'crossover', 'coupe', 'hatchback'].map((value) => <option key={value} value={value}>{readable(value)}</option>)}</select></Field><Field label="Condition"><select className={styles.control} value={vehicleFormData.condition} onChange={(e) => setVehicleFormData({ ...vehicleFormData, condition: e.target.value as Vehicle['condition'] })}>{['certified_pre_owned', 'used', 'brand_new'].map((value) => <option key={value} value={value}>{readable(value)}</option>)}</select></Field><Field label="Listing status"><select className={styles.control} value={vehicleFormData.status} onChange={(e) => setVehicleFormData({ ...vehicleFormData, status: e.target.value as Vehicle['status'] })}>{vehicleStatuses.map((value) => <option key={value} value={value}>{readable(value)}</option>)}</select></Field><Field label="Exterior color"><input className={styles.control} value={vehicleFormData.color} onChange={(e) => setVehicleFormData({ ...vehicleFormData, color: e.target.value })} /></Field><Field label="Location"><input className={styles.control} value={vehicleFormData.location} onChange={(e) => setVehicleFormData({ ...vehicleFormData, location: e.target.value })} /></Field><Field label="Image URLs (separate with commas)" wide><textarea className={styles.control} rows={2} placeholder="https://example.com/car.jpg" value={vehicleFormData.images} onChange={(e) => setVehicleFormData({ ...vehicleFormData, images: e.target.value })} /></Field><Field label="Features (separate with commas)" wide><input className={styles.control} placeholder="Sunroof, 360 camera, Leather seats" value={vehicleFormData.features} onChange={(e) => setVehicleFormData({ ...vehicleFormData, features: e.target.value })} /></Field><Field label="Description" wide><textarea className={styles.control} rows={4} value={vehicleFormData.description} onChange={(e) => setVehicleFormData({ ...vehicleFormData, description: e.target.value })} /></Field><label className={styles.checkboxField}><input type="checkbox" checked={vehicleFormData.featured} onChange={(e) => setVehicleFormData({ ...vehicleFormData, featured: e.target.checked })} /><span>Feature this vehicle on the website</span></label>
+      <form onSubmit={handleSaveVehicle} className={styles.vehicleForm}><div className={styles.formGrid}><Field label="Listing title *" wide><input className={styles.control} required placeholder="e.g. Mercedes-Benz E200 AMG Line" value={vehicleFormData.title} onChange={(e) => setVehicleFormData({ ...vehicleFormData, title: e.target.value })} /></Field><Field label="Make *"><input className={styles.control} required placeholder="e.g. Toyota" value={vehicleFormData.brand} onChange={(e) => setVehicleFormData({ ...vehicleFormData, brand: e.target.value })} /></Field><Field label="Model *"><input className={styles.control} required placeholder="e.g. Corolla" value={vehicleFormData.model} onChange={(e) => setVehicleFormData({ ...vehicleFormData, model: e.target.value })} /></Field>{([['year', 'Model year *', 1900, 2030], ['price', 'Price (PKR) *', 1, undefined], ['mileage', 'Mileage (km)', 0, undefined], ['inspectionScore', 'Inspection score (0–100)', 0, 100]] as const).map(([key, label, min, max]) => <Field key={key} label={label}><input className={styles.control} type="number" required={key === 'year' || key === 'price'} min={min} max={max} value={vehicleFormData[key]} onChange={(e) => setVehicleFormData({ ...vehicleFormData, [key]: e.target.value })} /></Field>)}
+        <Field label="Fuel type"><select className={styles.control} value={vehicleFormData.fuelType} onChange={(e) => setVehicleFormData({ ...vehicleFormData, fuelType: e.target.value as Vehicle['fuelType'] | '' })}><option value="">Choose fuel type</option>{['petrol', 'diesel', 'hybrid', 'electric'].map((value) => <option key={value} value={value}>{readable(value)}</option>)}</select></Field><Field label="Transmission"><select className={styles.control} value={vehicleFormData.transmission} onChange={(e) => setVehicleFormData({ ...vehicleFormData, transmission: e.target.value as Vehicle['transmission'] | '' })}><option value="">Choose transmission</option>{['automatic', 'manual'].map((value) => <option key={value} value={value}>{readable(value)}</option>)}</select></Field><Field label="Body style"><select className={styles.control} value={vehicleFormData.bodyType} onChange={(e) => setVehicleFormData({ ...vehicleFormData, bodyType: e.target.value as Vehicle['bodyType'] | '' })}><option value="">Choose body style</option>{['sedan', 'suv', 'crossover', 'coupe', 'hatchback'].map((value) => <option key={value} value={value}>{readable(value)}</option>)}</select></Field><Field label="Condition"><select className={styles.control} value={vehicleFormData.condition} onChange={(e) => setVehicleFormData({ ...vehicleFormData, condition: e.target.value as Vehicle['condition'] | '' })}><option value="">Choose condition</option>{['certified_pre_owned', 'used', 'brand_new'].map((value) => <option key={value} value={value}>{readable(value)}</option>)}</select></Field><Field label="Listing status"><select className={styles.control} value={vehicleFormData.status} onChange={(e) => setVehicleFormData({ ...vehicleFormData, status: e.target.value as Vehicle['status'] | '' })}><option value="">Choose status</option>{vehicleStatuses.map((value) => <option key={value} value={value}>{readable(value)}</option>)}</select></Field><Field label="Exterior color"><input className={styles.control} value={vehicleFormData.color} onChange={(e) => setVehicleFormData({ ...vehicleFormData, color: e.target.value })} /></Field><Field label="Location"><input className={styles.control} value={vehicleFormData.location} onChange={(e) => setVehicleFormData({ ...vehicleFormData, location: e.target.value })} /></Field><Field label="Image links (separate with commas)" wide><textarea className={styles.control} rows={2} placeholder="Paste image links here" value={vehicleFormData.images} onChange={(e) => setVehicleFormData({ ...vehicleFormData, images: e.target.value })} /></Field><AdminVehiclePhotoUpload key={`${editingVehicle?.id ?? 'new'}-${isVehicleModalOpen}`} onChange={setVehiclePhotos} disabled={isSaving} /><Field label="Features (separate with commas)" wide><input className={styles.control} placeholder="Sunroof, 360 camera, Leather seats" value={vehicleFormData.features} onChange={(e) => setVehicleFormData({ ...vehicleFormData, features: e.target.value })} /></Field><Field label="Description" wide><textarea className={styles.control} rows={4} value={vehicleFormData.description} onChange={(e) => setVehicleFormData({ ...vehicleFormData, description: e.target.value })} /></Field><label className={styles.checkboxField}><input type="checkbox" checked={vehicleFormData.featured} onChange={(e) => setVehicleFormData({ ...vehicleFormData, featured: e.target.checked })} /><span>Feature this vehicle on the website</span></label>
       </div><div className={styles.formFooter}><button data-motion-press className={styles.secondaryButton} type="button" onClick={() => closeVehicleDialog()} disabled={isSaving}>Cancel</button><button data-motion-press className={styles.primaryButton} type="submit" disabled={isSaving}>{isSaving ? <RefreshCw size={17} className={styles.spin} /> : <Check size={17} />}{isSaving ? 'Saving…' : editingVehicle ? 'Save vehicle' : 'Add to inventory'}</button></div></form>
     </dialog>
   </div>;

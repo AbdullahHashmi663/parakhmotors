@@ -1,32 +1,32 @@
 .footer { background: var(--pm-inverse-bg); color: var(--pm-inverse-text); }
 .inner { width: calc(100% - 96px); max-width: 1280px; margin-inline: auto; }
 .top { display: flex; justify-content: space-between; align-items: center; gap: 32px; padding-block: 64px 46px; border-bottom: 1px solid var(--pm-inverse-line); }
-.eyebrow { margin: 0 0 14px; color: var(--pm-inverse-accent); font-size: 10px; font-weight: 600; letter-spacing: 0.16em; }
-.top h2 { margin: 0; font-size: clamp(28px, 3vw, 43px); line-height: 1.18; font-weight: 500; letter-spacing: -0.055em; }
+.eyebrow { margin: 0 0 14px; color: var(--pm-inverse-accent); font-size: calc(10px * var(--pm-text-scale)); font-weight: 600; letter-spacing: 0.16em; }
+.top h2 { margin: 0; font-size: calc(clamp(28px, 3vw, 43px) * var(--pm-text-scale)); line-height: 1.18; font-weight: 500; letter-spacing: -0.055em; }
 .top h2 span { color: var(--pm-inverse-accent); }
-.contactButton { display: inline-flex; align-items: center; justify-content: center; gap: 28px; min-height: 50px; padding: 14px 22px; border-radius: 8px; background: var(--pm-lime); color: var(--pm-accent-text); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; transition: background 160ms ease; }
+.contactButton { display: inline-flex; align-items: center; justify-content: center; gap: 28px; min-height: 50px; padding: 14px 22px; border-radius: 8px; background: var(--pm-lime); color: var(--pm-accent-text); text-decoration: none; font-size: calc(13px * var(--pm-text-scale)); font-weight: 600; white-space: nowrap; transition: background 160ms ease; }
 .contactButton:hover { background: color-mix(in srgb, var(--pm-lime), var(--pm-accent-text) 8%); }
 .contactButton svg, .whatsapp svg:last-child, .bottom a svg { transition: translate 280ms cubic-bezier(.2,.7,.2,1); }
 .contactButton:is(:hover,:focus-visible) svg, .whatsapp:is(:hover,:focus-visible) svg:last-child, .bottom a:is(:hover,:focus-visible) svg { translate: 3px -3px; }
 .main { display: grid; grid-template-columns: 1.35fr 0.85fr 0.85fr 1.15fr; gap: 42px; padding-block: 52px 62px; }
 .brand { display: inline-block; border-radius: 6px; }
 .brand svg { width: 200px; }
-.brandColumn p { margin: 19px 0 23px; color: var(--pm-inverse-muted); font-size: 12px; line-height: 1.9; }
-.whatsapp { display: inline-flex; gap: 9px; align-items: center; color: var(--pm-inverse-accent); font-size: 12px; text-decoration: none; }
+.brandColumn p { margin: 19px 0 23px; color: var(--pm-inverse-muted); font-size: calc(12px * var(--pm-text-scale)); line-height: 1.9; }
+.whatsapp { display: inline-flex; gap: 9px; align-items: center; color: var(--pm-inverse-accent); font-size: calc(12px * var(--pm-text-scale)); text-decoration: none; }
 .linkColumn,
 .visitColumn { padding-top: 9px; }
-.main h3 { margin: 0 0 22px; font-size: 13px; font-weight: 500; color: var(--pm-inverse-text); }
-.linkColumn a { position: relative; display: block; width: fit-content; margin-bottom: 14px; color: var(--pm-inverse-muted); text-decoration: none; font-size: 12px; line-height: 1.55; transition: color 160ms ease; }
+.main h3 { margin: 0 0 22px; font-size: calc(13px * var(--pm-text-scale)); font-weight: 500; color: var(--pm-inverse-text); }
+.linkColumn a { position: relative; display: block; width: fit-content; margin-bottom: 14px; color: var(--pm-inverse-muted); text-decoration: none; font-size: calc(12px * var(--pm-text-scale)); line-height: 1.55; transition: color 160ms ease; }
 .linkColumn a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -3px; height: 1px; background: var(--pm-lime); transform: scaleX(0); transform-origin: right; transition: transform 280ms ease; }
 .linkColumn a:is(:hover,:focus-visible)::after { transform: scaleX(1); transform-origin: left; }
 .linkColumn a:hover,
 .email:hover,
 .whatsapp:hover { color: var(--pm-inverse-text); }
-.visitColumn p { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 17px; font-size: 12px; line-height: 1.8; color: var(--pm-inverse-muted); }
+.visitColumn p { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 17px; font-size: calc(12px * var(--pm-text-scale)); line-height: 1.8; color: var(--pm-inverse-muted); }
 .visitColumn p svg { flex-shrink: 0; margin-top: 3px; color: var(--pm-inverse-accent); }
-.phone { display: block; width: fit-content; margin-top: 23px; font-size: 19px; letter-spacing: -0.02em; color: var(--pm-inverse-text); text-decoration: none; }
-.email { display: block; width: fit-content; margin-top: 7px; font-size: 12px; color: var(--pm-inverse-muted); text-decoration: none; }
-.bottom { display: flex; gap: 24px; align-items: center; justify-content: space-between; border-top: 1px solid var(--pm-inverse-line); padding-block: 24px; font-size: 10px; color: var(--pm-inverse-muted); }
+.phone { display: block; width: fit-content; margin-top: 23px; font-size: calc(19px * var(--pm-text-scale)); letter-spacing: -0.02em; color: var(--pm-inverse-text); text-decoration: none; }
+.email { display: block; width: fit-content; margin-top: 7px; font-size: calc(12px * var(--pm-text-scale)); color: var(--pm-inverse-muted); text-decoration: none; }
+.bottom { display: flex; gap: 24px; align-items: center; justify-content: space-between; border-top: 1px solid var(--pm-inverse-line); padding-block: 24px; font-size: calc(10px * var(--pm-text-scale)); color: var(--pm-inverse-muted); }
 .bottom p { margin: 0; }
 .bottom span { margin-left: auto; color: var(--pm-inverse-muted); }
 .bottom a { display: inline-flex; gap: 5px; align-items: center; text-decoration: none; color: var(--pm-inverse-muted); }
@@ -44,7 +44,7 @@
 @media (max-width: 700px) {
   .inner { width: calc(100% - 40px); }
   .top { align-items: flex-start; flex-direction: column; padding-block: 42px 35px; gap: 23px; }
-  .top h2 { font-size: 31px; }
+  .top h2 { font-size: calc(31px * var(--pm-text-scale)); }
   .top h2 span { display: block; }
   .main { grid-template-columns: 1fr 1fr; gap: 32px 20px; padding-block: 35px 40px; }
   .brandColumn { grid-column: 1 / -1; }
@@ -71,4 +71,4 @@
   .contactButton:is(:hover,:focus-visible) svg, .whatsapp:is(:hover,:focus-visible) svg:last-child, .bottom a:is(:hover,:focus-visible) svg { translate: none; }
 }
 .social { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
-.social a { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; font-size: 12px; }
+.social a { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; font-size: calc(12px * var(--pm-text-scale)); }

@@ -46,6 +46,20 @@ CREATE TABLE IF NOT EXISTS public.vehicles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Public listings can use durable, optimized photos without exposing database access.
+CREATE TABLE IF NOT EXISTS public.vehicle_photos (
+  id UUID PRIMARY KEY,
+  vehicle_id TEXT NOT NULL REFERENCES public.vehicles(id) ON DELETE CASCADE,
+  image_data BYTEA NOT NULL,
+  mime_type TEXT NOT NULL DEFAULT 'image/webp' CHECK (mime_type = 'image/webp'),
+  width INTEGER NOT NULL CHECK (width BETWEEN 1 AND 1600),
+  height INTEGER NOT NULL CHECK (height BETWEEN 1 AND 1200),
+  size INTEGER NOT NULL CHECK (size BETWEEN 1 AND 524288 AND size = octet_length(image_data)),
+  position INTEGER NOT NULL CHECK (position BETWEEN 0 AND 19),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS vehicle_photos_vehicle_idx ON public.vehicle_photos(vehicle_id, position);
+
 -- 3. INSPECTION BOOKINGS (200+ Point Inspection)
 CREATE TABLE IF NOT EXISTS public.inspections (
   id TEXT PRIMARY KEY,
@@ -155,6 +169,7 @@ ALTER TABLE public.dealership_settings ADD COLUMN IF NOT EXISTS website_content 
 -- ENABLE ROW LEVEL SECURITY
 ALTER TABLE public.themes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vehicles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vehicle_photos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inspections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sell_requests ENABLE ROW LEVEL SECURITY;
@@ -175,7 +190,7 @@ DROP POLICY IF EXISTS "Public Insert Inquiries" ON public.inquiries;
 DROP POLICY IF EXISTS "Public Insert Inspections" ON public.inspections;
 DROP POLICY IF EXISTS "Public Insert Sell Requests" ON public.sell_requests;
 DROP POLICY IF EXISTS "Public Insert Find Requests" ON public.find_requests;
-REVOKE ALL ON public.themes, public.vehicles, public.dealership_settings,
+REVOKE ALL ON public.themes, public.vehicles, public.vehicle_photos, public.dealership_settings,
   public.inspections, public.inquiries, public.sell_requests, public.sell_request_photos, public.find_requests FROM anon, authenticated;
 GRANT SELECT ON public.themes, public.vehicles, public.dealership_settings TO anon, authenticated;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ArrowUpRight, Globe2, Menu, Phone, X } from 'lucide-react';
@@ -18,6 +18,7 @@ const navLinks = [
 ];
 
 export function SiteNavbar() {
+  const mobileMenuId = `${useId()}-navigation`;
   const pathname = usePathname();
   const [openPath, setOpenPath] = useState<string | null>(null);
   const mobileMenuOpen = openPath === pathname;
@@ -31,7 +32,7 @@ export function SiteNavbar() {
   const contact = useDealershipSettings();
   const phoneHref = `tel:${contact.phone.replace(/[^+\d]/g, '')}`;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = header.current;
     const panel = menuPanel.current;
     const icon = menuIcon.current;
@@ -104,6 +105,8 @@ export function SiteNavbar() {
     };
     mobileBreakpoint.addEventListener('change', onBreakpointChange);
     return () => {
+      setOpenPath(null);
+      isMenuOpen.current = false;
       window.removeEventListener('scroll', onScroll);
       mobileBreakpoint.removeEventListener('change', onBreakpointChange);
       cancelAnimationFrame(frame);
@@ -177,7 +180,7 @@ export function SiteNavbar() {
           className={styles.menuButton}
           aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={mobileMenuOpen}
-          aria-controls="mobile-navigation"
+          aria-controls={mobileMenuId}
           data-motion-press
           onClick={() => setMenuOpen(!isMenuOpen.current)}
         >
@@ -186,7 +189,7 @@ export function SiteNavbar() {
           </span>
         </button>
       </div>
-      <div ref={menuPanel} id="mobile-navigation" className={styles.mobileMenu} hidden inert aria-hidden={!mobileMenuOpen}>
+      <div ref={menuPanel} id={mobileMenuId} className={styles.mobileMenu} hidden inert aria-hidden={!mobileMenuOpen}>
         <nav aria-label="Mobile navigation">
           {navLinks.map((link) => (
             <Link

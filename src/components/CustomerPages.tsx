@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, type ReactNode } from 'react';
+import { Fragment, useId, type ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Check, ChevronRight, ShieldCheck } from 'lucide-react';
@@ -24,14 +24,14 @@ export function useCustomerPageContent(key: ContentPageKey) {
   return { settings, content: settings.websiteContent, page: resolve(settings.websiteContent.pages[key]) as PageContent };
 }
 
-export function CustomerContentHero({ page, href, secondary }: { page: PageContent; href?: string; secondary?: { href: string; label: string } }) {
+export function CustomerContentHero({ page, href, secondary, onPrimaryClick, target }: { page: PageContent; href?: string; target?: '_blank'; secondary?: { href: string; label: string; onClick?: () => void }; onPrimaryClick?: () => void }) {
   const lines = page.headline.split('\n');
-  return <CustomerHero eyebrow={page.eyebrow} title={<CustomerHeadline title={lines.length > 1 ? lines.slice(0, -1).join('\n') : page.headline} accent={lines.length > 1 ? lines.at(-1) : undefined} />} description={page.description} image={page.image} imageAlt={page.imageAlt} imageLabel={page.imageLabel} action={href && page.primaryLabel ? { href, label: page.primaryLabel } : undefined} secondary={secondary} />;
+  return <CustomerHero eyebrow={page.eyebrow} title={<CustomerHeadline title={lines.length > 1 ? lines.slice(0, -1).join('\n') : page.headline} accent={lines.length > 1 ? lines.at(-1) : undefined} />} description={page.description} image={page.image} imageAlt={page.imageAlt} imageLabel={page.imageLabel} action={href && page.primaryLabel ? { href, label: page.primaryLabel, onClick: onPrimaryClick, target } : undefined} secondary={secondary} />;
 }
 
-export function CustomerContentCTA({ page, href }: { page: PageContent; href?: string }) {
+export function CustomerContentCTA({ page, href, onClick }: { page: PageContent; href?: string; onClick?: () => void }) {
   if (!page.ctaTitle && !page.ctaDescription && !page.ctaLabel) return null;
-  return <CustomerCTA title={page.ctaTitle} description={page.ctaDescription} label={page.ctaLabel} href={href} />;
+  return <CustomerCTA title={page.ctaTitle} description={page.ctaDescription} label={page.ctaLabel} href={href} onClick={onClick} />;
 }
 
 export function CustomerFormAside({ page, children }: { page: PageContent; children?: ReactNode }) {
@@ -48,12 +48,13 @@ export function CustomerParagraphs({ text }: { text: string }) {
 }
 
 export function CustomerPage({ children }: { children: ReactNode }) {
-  return <MotionScene><a href="#main-content" className="skip-link">Skip to content</a><SiteNavbar /><main className={styles.page} id="main-content">{children}</main><SiteFooter /></MotionScene>;
+  const mainId = `${useId()}-main`;
+  return <MotionScene><a href={`#${mainId}`} className="skip-link">Skip to content</a><SiteNavbar /><main className={styles.page} id={mainId} tabIndex={-1}>{children}</main><SiteFooter /></MotionScene>;
 }
 
-export function CustomerHero({ eyebrow, title, description, image, imageAlt = 'A considered approach to your next car', imageLabel = 'Good cars. Clear decisions.', action, secondary }: { eyebrow: string; title: ReactNode; description: string; image?: string; imageAlt?: string; imageLabel?: string; action?: { href: string; label: string }; secondary?: { href: string; label: string } }) {
+export function CustomerHero({ eyebrow, title, description, image, imageAlt = 'A considered approach to your next car', imageLabel = 'Good cars. Clear decisions.', action, secondary }: { eyebrow: string; title: ReactNode; description: string; image?: string; imageAlt?: string; imageLabel?: string; action?: { href: string; label: string; onClick?: () => void; target?: '_blank' }; secondary?: { href: string; label: string; onClick?: () => void } }) {
   const settings = useDealershipSettings();
-  return <section className={styles.hero}><div className="container-custom"><div className={styles.heroInner}><div data-motion="hero"><nav data-motion-item aria-label="Breadcrumb" className={styles.breadcrumb}><Link href="/">Home</Link><ChevronRight size={12} aria-hidden="true" /><span>{eyebrow}</span></nav><p data-motion-item className={styles.eyebrow}>{eyebrow}</p><h1 data-motion-item>{title}</h1><p data-motion-item className={styles.intro}>{description}</p>{action && <div data-motion-item className={styles.actions}><Link data-motion-press className="btn-primary" href={action.href}>{action.label}<ArrowRight size={15} aria-hidden="true" /></Link>{secondary && <Link data-motion-press className="btn-secondary" href={secondary.href}>{secondary.label}</Link>}</div>}</div>{image && <div data-motion="image" className={styles.heroImage}><Image src={image} alt={imageAlt} fill sizes="(max-width: 800px) 100vw, 45vw" preload /><div className={styles.imageLabel}><ShieldCheck size={26} strokeWidth={1.4} aria-hidden="true" /><div><strong>{imageLabel}</strong>{settings.dealershipName}</div></div></div>}</div></div></section>;
+  return <section className={styles.hero}><div className="container-custom"><div className={styles.heroInner}><div data-motion="hero"><nav data-motion-item aria-label="Breadcrumb" className={styles.breadcrumb}><Link href="/">Home</Link><ChevronRight size={12} aria-hidden="true" /><span>{eyebrow}</span></nav><p data-motion-item className={styles.eyebrow}>{eyebrow}</p><h1 data-motion-item>{title}</h1><p data-motion-item className={styles.intro}>{description}</p>{action && <div data-motion-item className={styles.actions}><Link data-motion-press className="btn-primary" href={action.href} target={action.target} rel={action.target === '_blank' ? 'noopener noreferrer' : undefined} onClick={action.onClick} scroll={action.onClick ? false : undefined}>{action.label}<ArrowRight size={15} aria-hidden="true" /></Link>{secondary && <Link data-motion-press className="btn-secondary" href={secondary.href} onClick={secondary.onClick} scroll={secondary.onClick ? false : undefined}>{secondary.label}</Link>}</div>}</div>{image && <div data-motion="image" className={styles.heroImage}><Image src={image} alt={imageAlt} fill sizes="(max-width: 800px) 100vw, 45vw" preload /><div className={styles.imageLabel}><ShieldCheck size={26} strokeWidth={1.4} aria-hidden="true" /><div><strong>{imageLabel}</strong>{settings.dealershipName}</div></div></div>}</div></div></section>;
 }
 
 export function CustomerSectionTitle({ eyebrow, title, description }: { eyebrow: string; title: ReactNode; description?: string }) {
@@ -74,7 +75,7 @@ export function CustomerFAQ({ items, eyebrow = 'A little more clarity', title = 
   return <section className={styles.section}><div className="container-custom"><CustomerSectionTitle eyebrow={eyebrow} title={title} /><div data-motion="stagger" className={styles.faq}>{items.map((item, i) => <details data-motion-item data-motion-feedback="accordion" key={`${i}-${item.question}`}><summary>{item.question}</summary><p>{item.answer}</p></details>)}</div></div></section>;
 }
 
-export function CustomerCTA({ title = 'Your next move starts here.', description = 'A car question, a buying decision, or a car to sell. Let’s talk it through.', href = '/client/contact', label = 'Talk to our team' }: { title?: string; description?: string; href?: string; label?: string }) {
-  return <section className={styles.green}><div className="container-custom"><div data-motion="stagger" className={styles.cta}><div data-motion-item><h2>{title}</h2><p>{description}</p></div><Link data-motion-item data-motion-press href={href}>{label}<ArrowRight size={17} aria-hidden="true" /></Link></div></div></section>;
+export function CustomerCTA({ title = 'Your next move starts here.', description = 'A car question, a buying decision, or a car to sell. Let’s talk it through.', href = '/client/contact', label = 'Talk to our team', onClick }: { title?: string; description?: string; href?: string; label?: string; onClick?: () => void }) {
+  return <section className={styles.green}><div className="container-custom"><div data-motion="stagger" className={styles.cta}><div data-motion-item><h2>{title}</h2><p>{description}</p></div><Link data-motion-item data-motion-press href={href} onClick={onClick} scroll={onClick ? false : undefined}>{label}<ArrowRight size={17} aria-hidden="true" /></Link></div></div></section>;
 }
 

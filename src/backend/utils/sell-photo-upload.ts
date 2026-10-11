@@ -63,12 +63,12 @@ function isAnimatedPng(data: Buffer): boolean {
   return false;
 }
 
-export async function processSellPhoto(file: File): Promise<ProcessedSellPhoto> {
+async function processPhoto(file: File, maxOriginalBytes: number, sizeLabel: string): Promise<ProcessedSellPhoto> {
   if (!(SELL_PHOTO_TYPES as readonly string[]).includes(file.type)) {
     throw ApiError.badRequest('Upload JPG, PNG or WebP car photos');
   }
   if (!file.size) throw ApiError.badRequest('Empty photos cannot be uploaded');
-  if (file.size > MAX_UPLOAD_PHOTO_BYTES) throw tooLarge('Each uploaded photo must be 512 KB or smaller. Please select it again so it can be optimized.');
+  if (file.size > maxOriginalBytes) throw tooLarge(`Each uploaded photo must be ${sizeLabel} or smaller.`);
   const data = Buffer.from(await file.arrayBuffer());
   if (!matchesSignature(data, file.type)) throw ApiError.badRequest('A photo does not match its file type');
   try {
@@ -94,6 +94,14 @@ export async function processSellPhoto(file: File): Promise<ProcessedSellPhoto> 
     if (error instanceof ApiError) throw error;
     throw ApiError.badRequest('A photo is damaged or too large to decode. Please choose another image.');
   }
+}
+
+export function processSellPhoto(file: File) {
+  return processPhoto(file, MAX_UPLOAD_PHOTO_BYTES, '512 KB');
+}
+
+export function processVehiclePhoto(file: File) {
+  return processPhoto(file, 5 * 1024 * 1024, '5 MB');
 }
 
 export async function readSellRequestSubmission(request: Request): Promise<{ details: Record<string, unknown>; photos: ProcessedSellPhoto[] }> {

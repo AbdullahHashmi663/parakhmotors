@@ -4,6 +4,7 @@ import { requireAdmin } from '../auth';
 import { successResponse } from '../utils/api-response';
 import { handleApiError } from '../utils/api-error';
 import { readJsonObject } from '../utils/validation';
+import { readVehicleSubmission } from '../utils/vehicle-photo-upload';
 import type { VehicleQueryParams } from '@/types';
 
 export class VehicleController {
@@ -33,7 +34,10 @@ export class VehicleController {
   static async handleCreateVehicle(request: NextRequest) {
     try {
       requireAdmin(request);
-      const vehicle = await VehicleService.createVehicle(await readJsonObject(request));
+      const submission = request.headers.get('content-type')?.toLowerCase().startsWith('multipart/form-data')
+        ? await readVehicleSubmission(request)
+        : { details: await readJsonObject(request), photos: [] };
+      const vehicle = await VehicleService.createVehicle(submission.details, submission.photos);
       return successResponse(vehicle, { message: 'Vehicle listed successfully', status: 201 });
     } catch (error) { return handleApiError(error); }
   }
@@ -41,7 +45,10 @@ export class VehicleController {
   static async handleUpdateVehicle(id: string, request: NextRequest) {
     try {
       requireAdmin(request);
-      const updated = await VehicleService.updateVehicle(id, await readJsonObject(request));
+      const submission = request.headers.get('content-type')?.toLowerCase().startsWith('multipart/form-data')
+        ? await readVehicleSubmission(request)
+        : { details: await readJsonObject(request), photos: [] };
+      const updated = await VehicleService.updateVehicle(id, submission.details, submission.photos);
       return successResponse(updated, { message: 'Vehicle updated successfully' });
     } catch (error) { return handleApiError(error); }
   }

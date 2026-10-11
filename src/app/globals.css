@@ -1,4 +1,5 @@
 :root {
+  --pm-text-scale: 1.08;
   --color-ivory: #f7f8f2;
   --color-evergreen: #153e35;
   --color-charcoal: #182420;
@@ -51,7 +52,7 @@ body {
   color: var(--pm-ink);
   background: var(--pm-paper);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: calc(15px * var(--pm-text-scale));
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
 }
@@ -68,7 +69,7 @@ img { max-width: 100%; }
 button, a, input, select, textarea, summary { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid var(--pm-focus); outline-offset: 4px; }
 .container-custom { width: min(1280px, calc(100% - 96px)); margin-inline: auto; }
-.btn-primary, .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 50px; padding: 13px 22px; border-radius: 5px; border: 1px solid var(--pm-green); font-size: 13px; font-weight: 600; line-height: 1.4; transition: background 200ms, color 200ms, box-shadow 200ms; }
+.btn-primary, .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 50px; padding: 13px 22px; border-radius: 5px; border: 1px solid var(--pm-green); font-size: calc(13px * var(--pm-text-scale)); font-weight: 600; line-height: 1.4; transition: background 200ms, color 200ms, box-shadow 200ms; }
 .btn-primary { background: var(--pm-button-bg); color: var(--pm-button-text); }
 .btn-primary:hover { background: var(--pm-hover); color: var(--pm-hover-text); box-shadow: 0 5px 16px #00000014; }
 .btn-secondary { background: transparent; color: var(--pm-green); border-color: var(--pm-line); }
@@ -91,5 +92,5 @@ dialog { color: var(--pm-ink); }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) { [data-motion-hover="lift"]:hover { translate: 0 -5px; box-shadow: 0 14px 34px #153e3514; } }
 @media (prefers-reduced-motion: reduce) { .motion-progress { display: none; } [data-motion-hover="lift"] { translate: none; } [data-motion-feedback="accordion"]::details-content { transition: none; } }
 @media (max-width: 900px) { .container-custom { width: calc(100% - 48px); } }
-@media (max-width: 600px) { .container-custom { width: calc(100% - 40px); } body { font-size: 14px; } html { scroll-padding-top: 100px; } }
+@media (max-width: 600px) { .container-custom { width: calc(100% - 40px); } body { font-size: calc(14px * var(--pm-text-scale)); } html { scroll-padding-top: 100px; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }

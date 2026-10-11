@@ -3,16 +3,16 @@
 .upload legend svg { color: var(--pm-green); flex-shrink: 0; }
 .upload legend span { font-weight: 400; color: var(--pm-muted); }
 .chooser { background: var(--pm-paper); border: 1px dashed var(--pm-line); border-radius: 5px; padding: 20px; }
-.chooser label { display: block; font-size: 13px; font-weight: 500; color: var(--pm-ink); }
-.chooser p { font-size: 12px; line-height: 1.7; color: var(--pm-muted); margin: 8px 0 15px; }
-.chooser input { width: 100%; min-width: 0; color: var(--pm-muted); font: inherit; font-size: 12px; border-radius: 3px; }
+.chooser label { display: block; font-size: calc(13px * var(--pm-text-scale)); font-weight: 500; color: var(--pm-ink); }
+.chooser p { font-size: calc(12px * var(--pm-text-scale)); line-height: 1.7; color: var(--pm-muted); margin: 8px 0 15px; }
+.chooser input { width: 100%; min-width: 0; color: var(--pm-muted); font: inherit; font-size: calc(12px * var(--pm-text-scale)); border-radius: 3px; }
 .chooser input::file-selector-button { min-height: 44px; margin-right: 12px; padding: 10px 15px; border: 1px solid var(--pm-line); border-radius: 3px; font: inherit; font-weight: 500; background: var(--pm-tint); color: var(--pm-green); cursor: pointer; transition: border-color .2s, background .2s; }
 .chooser input:not(:disabled)::file-selector-button:hover { border-color: var(--pm-green); }
 .chooser input:focus-visible { outline: 3px solid var(--pm-focus); outline-offset: 4px; }
 .chooser input:disabled { opacity: .65; cursor: wait; }
 .chooser input:disabled::file-selector-button { cursor: wait; }
-.count { color: var(--pm-muted); font-size: 11px; line-height: 1.7; margin: 13px 0 0; }
-.error { display: flex; gap: 9px; align-items: flex-start; color: var(--pm-ink); background: var(--pm-tint); border: 1px solid var(--pm-line); border-left: 3px solid var(--pm-green); border-radius: 3px; padding: 12px; margin: 13px 0 0; font-size: 12px; line-height: 1.7; }
+.count { color: var(--pm-muted); font-size: calc(11px * var(--pm-text-scale)); line-height: 1.7; margin: 13px 0 0; }
+.error { display: flex; gap: 9px; align-items: flex-start; color: var(--pm-ink); background: var(--pm-tint); border: 1px solid var(--pm-line); border-left: 3px solid var(--pm-green); border-radius: 3px; padding: 12px; margin: 13px 0 0; font-size: calc(12px * var(--pm-text-scale)); line-height: 1.7; }
 .error svg { flex-shrink: 0; color: var(--pm-green); margin-top: 2px; }
 .previews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; list-style: none; padding: 0; margin: 18px 0 0; }
 .previews li { min-width: 0; }
@@ -22,6 +22,6 @@
 .preview button:hover:not(:disabled) { background: var(--pm-button-bg); color: var(--pm-button-text); }
 .preview button:focus-visible { outline: 3px solid var(--pm-focus); outline-offset: 3px; }
 .preview button:disabled { opacity: .65; cursor: wait; }
-.previews li > span { display: block; color: var(--pm-muted); font-size: 11px; margin-top: 8px; }
-@media (max-width: 560px) { .chooser { padding: 16px; } .previews { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .chooser input { font-size: 13px; } }
+.previews li > span { display: block; color: var(--pm-muted); font-size: calc(11px * var(--pm-text-scale)); margin-top: 8px; }
+@media (max-width: 560px) { .chooser { padding: 16px; } .previews { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .chooser input { font-size: calc(13px * var(--pm-text-scale)); } }
 @media (prefers-reduced-motion: reduce) { .chooser input::file-selector-button, .preview button { transition: none; } }

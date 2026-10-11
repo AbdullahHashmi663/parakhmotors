@@ -49,7 +49,14 @@ export function handleApiError(error: unknown): NextResponse {
   }
 
   if (error instanceof Error) {
-    console.error('[API Internal Error]', error.name);
+    const pool = global.__parakhDatabase?.pool;
+    const errorCode = 'code' in error && typeof error.code === 'string' && /^[A-Z0-9_]{1,40}$/.test(error.code) ? error.code : undefined;
+    console.error('[API Internal Error]', {
+      name: error.name,
+      code: errorCode,
+      connectionTimeout: /connection timeout|timeout exceeded when trying to connect/i.test(error.message),
+      ...(pool && { connections: pool.totalCount, idle: pool.idleCount, waiting: pool.waitingCount }),
+    });
     return errorResponse('We could not complete your request. Please try again shortly.', {
       status: 500,
       code: 'INTERNAL_SERVER_ERROR',

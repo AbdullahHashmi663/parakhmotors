@@ -95,7 +95,7 @@
   white-space: nowrap;
   background: var(--pm-inverse-bg, #0c201c);
   color: #ffffff;
-  font-size: 12px;
+  font-size: calc(12px * var(--pm-text-scale));
   font-weight: 600;
   letter-spacing: -0.01em;
   padding: 8px 14px;

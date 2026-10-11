@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { animate, createScope } from 'animejs';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -18,6 +18,7 @@ import { formatServicePrice, getActivePackages, resolveContentData, servicePrice
 import styles from './HomeExperience.module.css';
 
 export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[] }) {
+  const mainId = `${useId()}-main`;
   const contact = useDealershipSettings();
   const content = resolveContentData(contact.websiteContent, contact);
   const home = content.home;
@@ -33,6 +34,8 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
   const [shortlist, setShortlist] = useState<string[]>([]);
   const [shortlistOnly, setShortlistOnly] = useState(false);
   const [selected, setSelected] = useState<Vehicle | null>(null);
+  // Cached routes keep their state; a departed vehicle dialog should stay closed.
+  useLayoutEffect(() => () => setSelected(null), []);
   const [vehicleTrigger, setVehicleTrigger] = useState<HTMLButtonElement | null>(null);
   function openVehicle(vehicle: Vehicle, trigger: HTMLButtonElement) { setVehicleTrigger(trigger); setSelected(vehicle); }
   const [inventoryError, setInventoryError] = useState(false);
@@ -90,18 +93,21 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
     return () => { reducedMotion.removeEventListener('change', stopMotion); scope.revert(); };
   }, [filtered.length]);
   function resetFilters() { setQuery(''); setBrand('all'); setBody('all'); setBudget('all'); setShortlistOnly(false); }
+  function scrollToInventory() {
+    document.getElementById('inventory-section')?.scrollIntoView({ behavior: 'instant', block: 'start' });
+  }
 
   return <MotionScene>
-    <a className="skip-link" href="#main-content">Skip to content</a>
+    <a className="skip-link" href={`#${mainId}`}>Skip to content</a>
     <SiteNavbar />
-    <main id="main-content" className={styles.main}>
+    <main id={mainId} tabIndex={-1} className={styles.main}>
       <section className={`${styles.hero} container-custom`} aria-labelledby="hero-title">
         <div data-motion="hero" className={styles.heroCopy}>
           <div data-motion-item className={styles.eyebrow}><span /> {home.heroEyebrow}</div>
           <h1 data-motion-item id="hero-title" style={{ whiteSpace: 'pre-line' }}>{contact.heroHeadline === defaultContact.heroHeadline ? <>A better drive.<br />Starts with <span>trust.</span></> : contact.heroHeadline}</h1>
           <p data-motion-item>{contact.heroSubheadline === defaultContact.heroSubheadline ? <>Great cars. Honest advice. Complete peace of mind.<br className={styles.desktopBreak} /> Your next chapter deserves a better beginning.</> : contact.heroSubheadline}</p>
           <div data-motion-item className={styles.heroActions}>
-            <Link data-motion-press href="#inventory-section" className="btn-primary">Find your next car <ArrowUpRight aria-hidden="true" /></Link>
+            <Link data-motion-press href="#inventory-section" className="btn-primary" onClick={scrollToInventory} scroll={false}>Find your next car <ArrowUpRight aria-hidden="true" /></Link>
             <Link data-motion-press href="/client/services" className={styles.textLink}>Explore our services <ArrowRight aria-hidden="true" /></Link>
           </div>
           <div data-motion-item className={styles.heroTrust}><div className={styles.trustIcon}><ShieldCheck aria-hidden="true" /></div><div><strong>{home.heroTrustTitle}</strong><span>{home.heroTrustText}</span></div></div>
@@ -120,7 +126,7 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
         <div data-motion-item><Handshake aria-hidden="true" /><p><strong>End-to-end support</strong><span>From first look to handover</span></p></div>
         <div data-motion-item><MapPin aria-hidden="true" /><p><strong>Rooted in Pakistan</strong><span>Local knowledge. Wider horizons.</span></p></div>
       </div></section>
-      <section className={`${styles.section} container-custom`} id="services">
+      <section className={`${styles.section} container-custom`} id="home-services">
         <div className={styles.sectionHeading}><div data-motion="heading"><div className={styles.eyebrow}><span /> MADE FOR YOUR NEXT MOVE</div><h2 style={{ whiteSpace: 'pre-line' }}>{home.servicesTitle}</h2></div><div data-motion="reveal" className={styles.headingAside}><p style={{ whiteSpace: 'pre-line' }}>{home.servicesDescription}</p><Link data-motion-press href="/client/services" className={styles.textLink}>Discover all services <ArrowUpRight aria-hidden="true" /></Link></div></div>
         <div data-motion="stagger" className={styles.serviceGrid}>{services.map((service, i) => <Link data-motion-item data-motion-hover="lift" data-motion-press href={service.href} className={styles.serviceCard} key={service.id}>
           {service.image && <div className={styles.serviceImage}><Image src={service.image} alt={service.imageAlt} fill sizes="(max-width: 760px) 100vw, 33vw" /><span>{servicePriceLabel(content, service)}</span></div>}
@@ -133,8 +139,8 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
           <div data-motion="reveal" className={styles.reportVisual}><div className={styles.reportHeader}><div className={styles.reportMark}><ShieldCheck aria-hidden="true" /><strong>PARAKH <small>INSPECTION REPORT</small></strong></div><span>SAMPLE REPORT</span></div><div className={styles.reportTitle}><span>KNOW YOUR CAR. KNOW YOUR NEXT MOVE.</span><h3>Confidence, in detail.</h3></div><div className={styles.scanIllustration}><svg data-motion="draw" viewBox="0 0 400 190" fill="none" aria-hidden="true"><path d="M56 130H35V108L65 95L110 54H251L297 91L350 103L365 126V139H334M112 139H267M66 111H105M282 107H334" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" /><path d="M123 66H175V94H96L123 66ZM188 66H246L279 94H188V66Z" stroke="currentColor" strokeWidth="2" /><circle cx="85" cy="134" r="27" stroke="currentColor" strokeWidth="2.5" /><circle cx="302" cy="134" r="27" stroke="currentColor" strokeWidth="2.5" /><circle cx="85" cy="134" r="16" stroke="currentColor" /><circle cx="302" cy="134" r="16" stroke="currentColor" /><path d="M58 35V20H76M324 20H342V35M58 163V178H76M324 178H342V163" stroke="var(--pm-green)" strokeWidth="1.5" /><path d="M200 18V178" stroke="var(--pm-green)" strokeDasharray="4 5" /><circle cx="133" cy="109" r="5" fill="var(--pm-green)" /><circle cx="262" cy="109" r="5" fill="var(--pm-green)" /><circle cx="208" cy="52" r="5" fill="var(--pm-green)" /></svg><span>200+ individual checkpoints</span></div><div data-motion="stagger" className={styles.reportRows}>{[['Mechanical condition', 'Engine, transmission & brakes'], ['Exterior & structure', 'Paint depth, panels & chassis'], ['Interior & electrical', 'Systems, controls & cabin']].map(([title, detail]) => <div data-motion-item key={title}><span><Check aria-hidden="true" /></span><p><strong>{title}</strong><small>{detail}</small></p><ChevronDown aria-hidden="true" /></div>)}</div><div className={styles.reportBottom}><ShieldCheck aria-hidden="true" />A clear report. An informed decision.</div></div>
         </div>
       </section>
-      <section className={`${styles.section} container-custom`} id="inventory-section">
-        <div className={styles.sectionHeading}><div data-motion="heading"><div className={styles.eyebrow}><span /> THE RIGHT CAR IS OUT THERE</div><h2>Meet your next chapter.</h2></div><div data-motion="reveal" className={styles.headingAside}><p>A considered collection. A personal choice.<br />Explore the cars currently in our inventory.</p></div></div>
+      <section className={`${styles.section} container-custom`}>
+        <div className={styles.sectionHeading} id="inventory-section"><div data-motion="heading"><div className={styles.eyebrow}><span /> THE RIGHT CAR IS OUT THERE</div><h2>Meet your next chapter.</h2></div><div data-motion="reveal" className={styles.headingAside}><p>A considered collection. A personal choice.<br />Explore the cars currently in our inventory.</p></div></div>
         <form data-motion="reveal" className={styles.filterBar} onSubmit={e => { e.preventDefault(); setShowAll(true); document.getElementById('vehicle-results')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }); }}>
           <div className={styles.searchInput}><Search aria-hidden="true" /><label htmlFor="vehicle-search" className="sr-only">Search cars by model or city</label><input id="vehicle-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search your next car..." /></div>
           <div data-motion-feedback="choice" className={styles.selectField}><label htmlFor="brand-filter">Make</label><select id="brand-filter" value={brand} onChange={e => setBrand(e.target.value)}><option value="all">All brands</option>{brands.map(b => <option key={b}>{b}</option>)}</select></div>

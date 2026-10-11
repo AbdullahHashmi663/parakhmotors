@@ -85,6 +85,7 @@
 .inspectionScore { display: flex; gap: 4px; align-items: center; font-size: calc(8px * var(--pm-text-scale)); background: var(--pm-paper); color: var(--pm-green); padding: 4px 7px; border-radius: 3px; }
 .vehicleBody { padding: 19px; }
 .vehicleMeta { display: flex; justify-content: space-between; font-size: calc(9px * var(--pm-text-scale)); color: var(--pm-muted); margin-bottom: 12px; gap: 12px; }
+.inventoryId { display: block; margin-top: 6px; margin-bottom: 13px; color: var(--pm-muted); font: 500 calc(9px * var(--pm-text-scale)) / 1.5 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
 .vehicleBody h3 { font-size: calc(17px * var(--pm-text-scale)); font-weight: 500; line-height: 1.4; min-height: 48px; letter-spacing: -.4px; }
 .vehicleSpecs { display: flex; gap: 11px; font-size: calc(9px * var(--pm-text-scale)); color: var(--pm-muted); margin-block: 12px; text-transform: capitalize; flex-wrap: wrap; }
 .vehiclePrice { font-size: calc(21px * var(--pm-text-scale)); font-weight: 500; color: var(--pm-green); margin-bottom: 15px; }
@@ -111,6 +112,13 @@
 .inquiryHeader > div:not(.initialAvatar) { flex: 1; }
 .inquiryHeader h3 { font-size: calc(14px * var(--pm-text-scale)); font-weight: 500; }
 .inquiryHeader small { color: var(--pm-muted); font-size: calc(9px * var(--pm-text-scale)); }
+.inquiryVehicle { display: flex; align-items: center; gap: 11px; margin-bottom: 15px; padding: 12px 14px; border: 1px solid var(--pm-line); border-left: 3px solid var(--pm-green); border-radius: 4px; background: var(--pm-tint); }
+.inquiryVehicle > svg { flex: 0 0 auto; color: var(--pm-green); }
+.inquiryVehicle > div { min-width: 0; }
+.inquiryVehicle strong, .inquiryVehicle span { display: block; overflow-wrap: anywhere; }
+.inquiryVehicle strong { font-size: calc(12px * var(--pm-text-scale)); font-weight: 550; }
+.inquiryVehicle span { margin-top: 4px; color: var(--pm-muted); font-size: calc(10px * var(--pm-text-scale)); }
+.inquiryVehicle code { color: var(--pm-ink); font: 500 calc(10px * var(--pm-text-scale)) / 1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .contactDetails { display: flex; gap: 16px; flex-wrap: wrap; font-size: calc(10px * var(--pm-text-scale)); color: var(--pm-muted); margin-bottom: 16px; }
 .contactDetails a { display: inline-flex; align-items: center; gap: 5px; }
 .inquiryMessage { background: var(--pm-soft); padding: 16px; border-radius: 4px; color: var(--pm-muted); font-size: calc(12px * var(--pm-text-scale)); line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }

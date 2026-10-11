@@ -23,6 +23,7 @@
 .photoViewerClose svg, .photoViewerArrow svg { width: 21px; height: 21px; }
 .photoViewerStage { position: relative; min-height: 0; display: grid; place-items: center; overflow: hidden; touch-action: pan-y; overscroll-behavior: contain; }
 .photoViewerStage img { object-fit: contain; user-select: none; -webkit-user-drag: none; }
+.photoViewerStage img[data-photo-incoming], .photoViewerStage img[data-photo-outgoing] { will-change: transform, opacity; }
 .photoViewerArrow { position: absolute; z-index: 1; top: 50%; translate: 0 -50%; background: rgb(0 0 0 / 55%); }
 .photoViewerPrevious { left: 12px; }
 .photoViewerNext { right: 12px; }

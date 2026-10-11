@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
-export const metadata: Metadata = { title: "About Parakh", description: "Meet the people and principles behind Parakh Motors. Independent car inspections, personal sourcing and selling support in Lahore, Pakistan." };
+export const metadata: Metadata = { title: "About Parakh Motors", description: "Meet the people and principles behind Parakh Motors in Lahore, Pakistan. Independent inspections, personal car sourcing and honest selling support for every journey.", alternates: { canonical: '/client/about' } };
 
 export default function PageLayout({ children }: { children: ReactNode }) { return children; }

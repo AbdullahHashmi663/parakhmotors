@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
 import type { DealershipSettings } from '@/types';
 import { normalizeSiteContent } from '@/lib/site-content';
 import { defaultDealershipSettings } from '@/lib/dealership-settings';
@@ -14,7 +13,6 @@ const normalizeSettings = (value: DealershipSettings) => ({ ...defaultContact, .
 
 export function DealershipSettingsProvider({ children, initialSettings }: { children: ReactNode; initialSettings: DealershipSettings }) {
   const [settings, setSettings] = useState(() => normalizeSettings(initialSettings));
-  const pathname = usePathname();
   const revision = useRef(0);
 
   useEffect(() => {
@@ -52,7 +50,7 @@ export function DealershipSettingsProvider({ children, initialSettings }: { chil
       window.removeEventListener('focus', onVisible);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [pathname]);
+  }, []);
 
   return <SettingsContext.Provider value={settings}>{children}</SettingsContext.Provider>;
 }

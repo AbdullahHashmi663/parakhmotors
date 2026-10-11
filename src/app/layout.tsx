@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ScrollToTop } from '@/components/ScrollToTop';
-import { SiteMotion } from '@/components/SiteMotion';
+import { SiteMotionLoader } from '@/components/SiteMotionLoader';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
 import { DealershipSettingsProvider } from '@/components/useDealershipSettings';
 import { defaultDealershipSettings } from '@/lib/dealership-settings';
@@ -20,10 +20,11 @@ const geist = localFont({ src: '../../public/fonts/geist-latin.woff2', variable:
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://parakhmotors.com'),
   title: { default: 'Parakh Motors | A better drive starts with trust.', template: '%s | Parakh Motors' },
-  description: 'Buy, sell and find your next car with confidence. Independent 200+ point inspections, vehicle sourcing and personal deal support from Parakh Motors in Pakistan.',
-  keywords: ['car inspection Pakistan', 'buy cars Lahore', 'sell my car', 'vehicle sourcing', 'Parakh Motors'],
+  description: 'Buy, sell and inspect cars with confidence. Parakh Motors offers carefully selected cars, independent vehicle inspections and personal buying and selling support in Lahore, Pakistan.',
   icons: { icon: '/brand/mark.svg?v=car-crest', apple: '/brand/apple-touch-icon.png?v=car-crest' },
   openGraph: { title: 'Parakh Motors | A better drive starts with trust.', description: 'Your next chapter, driven with confidence. Car inspections, buying, selling and sourcing in Pakistan.', images: [{ url: '/images/parakh-journey.webp', width: 1536, height: 1024, alt: 'Parakh Motors — a journey through the mountains of Pakistan' }], type: 'website', locale: 'en_PK', siteName: 'Parakh Motors' },
+  twitter: { card: 'summary_large_image', title: 'Parakh Motors | A better drive starts with trust.', description: 'Buy, sell and inspect cars with confidence in Lahore, Pakistan.', images: ['/images/parakh-journey.webp'] },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
 };
 
 async function getThemeData() {
@@ -57,6 +58,19 @@ ${themeTokensCss}
   color-scheme: ${mode};
 }
 `;
+  const businessData = {
+    '@context': 'https://schema.org',
+    '@type': 'AutoDealer',
+    name: settings.dealershipName,
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://parakhmotors.com',
+    logo: new URL('/brand/mark.svg', process.env.NEXT_PUBLIC_SITE_URL || 'https://parakhmotors.com').toString(),
+    image: new URL('/images/parakh-journey.webp', process.env.NEXT_PUBLIC_SITE_URL || 'https://parakhmotors.com').toString(),
+    description: settings.tagline,
+    telephone: settings.phone,
+    email: settings.email,
+    address: { '@type': 'PostalAddress', streetAddress: settings.address, addressLocality: 'Lahore', addressCountry: 'PK' },
+    currenciesAccepted: settings.currency,
+  };
 
   return (
     <html
@@ -73,13 +87,14 @@ ${themeTokensCss}
         <Script id="pm-page-opening" strategy="beforeInteractive">{"if('scrollRestoration' in history){history.scrollRestoration='manual'}if(!location.hash){window.scrollTo({top:0,left:0,behavior:'instant'})}"}</Script>
       </head>
       <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(businessData).replace(/</g, '\\u003c') }} />
         <Suspense fallback={null}>
           <ScrollToTop />
-          <SiteMotion />
+          <SiteMotionLoader />
         </Suspense>
         <ThemeProvider initialActiveTheme={activeTheme} initialThemes={themes}>
           <DealershipSettingsProvider initialSettings={settings}>
-            <WhatsAppButton />
+          <Suspense fallback={null}><WhatsAppButton /></Suspense>
             {children}
           </DealershipSettingsProvider>
         </ThemeProvider>

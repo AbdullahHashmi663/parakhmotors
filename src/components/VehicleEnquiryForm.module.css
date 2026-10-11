@@ -1,0 +1,11 @@
+.panel { margin-top: 30px; padding: 22px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--card-bg); }
+.panel h2 { margin: 0; font-size: 22px; }
+.panel > p { margin: 8px 0 18px; color: var(--pm-muted); line-height: 1.5; }
+.panel form { display: grid; gap: 13px; }
+.panel label { display: grid; gap: 6px; font-size: 14px; font-weight: 650; }
+.panel input, .panel textarea { width: 100%; padding: 11px 12px; border: 1px solid var(--border-color); border-radius: 7px; background: var(--background); color: var(--foreground); font: inherit; }
+.panel textarea { resize: vertical; }
+.panel button { min-height: 48px; border: 0; border-radius: 7px; background: var(--pm-lime); color: #10231f; font: inherit; font-weight: 750; cursor: pointer; }
+.panel button:disabled { opacity: .65; cursor: wait; }
+.success { color: var(--pm-lime) !important; font-weight: 650; }
+.error { color: #ff8c76 !important; margin: 0 !important; }

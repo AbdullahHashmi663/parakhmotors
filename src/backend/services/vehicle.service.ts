@@ -1,4 +1,5 @@
 import { dataStore } from '../repositories/data-store';
+import { revalidateTag } from 'next/cache';
 import { ApiError } from '../utils/api-error';
 import { enumField, numberField, resourceId, textField } from '../utils/validation';
 import type { Vehicle, VehicleQueryParams } from '@/types';
@@ -98,7 +99,9 @@ export class VehicleService {
   static async createVehicle(raw: Record<string, unknown>, photos: ProcessedSellPhoto[] = []) {
     const value = vehicleFields(raw, false) as Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>;
     if (value.images.length + photos.length > 20) throw ApiError.badRequest('Use no more than 20 image links and uploaded photos together');
-    return photos.length ? dataStore.createVehicleWithPhotos(value, photos) : dataStore.createVehicle(value);
+    const created = await (photos.length ? dataStore.createVehicleWithPhotos(value, photos) : dataStore.createVehicle(value));
+    revalidateTag('inventory', { expire: 0 });
+    return created;
   }
 
   static async updateVehicle(id: string, raw: Record<string, unknown>, photos: ProcessedSellPhoto[] = []) {
@@ -118,10 +121,12 @@ export class VehicleService {
       ? await dataStore.updateVehicleWithPhotos(validId, fields, photos)
       : await dataStore.updateVehicle(validId, fields);
     if (!updated) throw ApiError.notFound('Vehicle not found');
+    revalidateTag('inventory', { expire: 0 });
     return updated;
   }
 
   static async deleteVehicle(id: string) {
     if (!(await dataStore.deleteVehicle(resourceId(id)))) throw ApiError.notFound('Vehicle not found');
+    revalidateTag('inventory', { expire: 0 });
   }
 }

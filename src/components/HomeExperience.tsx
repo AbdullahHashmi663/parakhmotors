@@ -1,13 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { animate, createScope } from 'animejs';
+import { lazy, Suspense, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowUpRight, ArrowRight, ShieldCheck, Search, CarFront, BadgeCheck, ScanLine, Handshake, Check, Heart, MapPin, Gauge, Fuel, SlidersHorizontal, ChevronDown, MessageCircle, Plus, Minus, CircleCheck } from 'lucide-react';
 import { SiteNavbar } from '@/components/SiteNavbar';
 import { SiteFooter } from '@/components/SiteFooter';
-import { VehicleDetails } from '@/components/VehicleDetails';
 import { VehicleImage } from '@/components/VehicleImage';
 import { MotionScene } from '@/components/MotionScene';
 import { useDealershipSettings, defaultContact } from '@/components/useDealershipSettings';
@@ -16,6 +14,8 @@ import { formatPKR, formatMileage } from '@/lib/utils';
 import type { Vehicle } from '@/types';
 import { formatServicePrice, getActivePackages, resolveContentData, servicePriceLabel } from '@/lib/site-content';
 import styles from './HomeExperience.module.css';
+
+const VehicleDetails = lazy(() => import('@/components/VehicleDetails').then(({ VehicleDetails: Component }) => ({ default: Component })));
 
 const carBrands = [
   'Acura', 'Adam', 'Aion', 'Alfa Romeo', 'Alpine', 'Aston Martin', 'Audi', 'BAIC', 'Baojun', 'Bentley', 'BMW', 'Bugatti', 'Buick',
@@ -102,12 +102,17 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
     if (!changed || !counter) return;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (reducedMotion.matches) return;
-    const scope = createScope({ root: counter }).add(() => {
-      animate(counter, { opacity: [.6, 1], y: [4, 0], duration: 280, ease: 'out(3)' });
+    let cancelled = false;
+    let scope: import('animejs').Scope | undefined;
+    void import('animejs').then(({ animate, createScope }) => {
+      if (cancelled || reducedMotion.matches) return;
+      scope = createScope({ root: counter }).add(() => {
+        animate(counter, { opacity: [.6, 1], y: [4, 0], duration: 280, ease: 'out(3)' });
+      });
     });
-    const stopMotion = () => { if (reducedMotion.matches) scope.revert(); };
+    const stopMotion = () => { if (reducedMotion.matches) scope?.revert(); };
     reducedMotion.addEventListener('change', stopMotion);
-    return () => { reducedMotion.removeEventListener('change', stopMotion); scope.revert(); };
+    return () => { cancelled = true; reducedMotion.removeEventListener('change', stopMotion); scope?.revert(); };
   }, [filtered.length]);
   function resetFilters() { setQuery(''); setBrand('all'); setBody('all'); setBudgetMin(''); setBudgetMax(''); setShortlistOnly(false); }
   function scrollToInventory() {
@@ -167,7 +172,7 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
         </form>
         <div data-motion="reveal" className={styles.resultsToolbar} id="vehicle-results"><span ref={resultsCount} aria-live="polite">{inventoryLoading && !vehicles.length ? 'Loading the collection…' : inventoryError && !vehicles.length ? 'Collection temporarily unavailable' : <>{filtered.length} {filtered.length === 1 ? 'car' : 'cars'} to discover{hasFilters ? ' · matching your search' : ''}</>}</span><div>{hasFilters && <button data-motion-press type="button" onClick={resetFilters}>Clear filters</button>}<button data-motion-press data-motion-feedback="heart" type="button" aria-pressed={shortlistOnly} onClick={() => setShortlistOnly(!shortlistOnly)} className={shortlistOnly ? styles.selectedShortlist : ''}><Heart aria-hidden="true" />Shortlist ({shortlist.length})</button></div></div>
         {inventoryError && <div data-motion="reveal" className={styles.inventoryWarning} role="status"><p>{vehicles.length ? 'We couldn’t refresh the inventory. Showing the last available collection.' : 'Our collection is temporarily unavailable. Please try again, or contact our team for current availability.'}</p><button data-motion-press className="btn-secondary" type="button" onClick={() => void refreshInventory()} disabled={inventoryLoading}>{inventoryLoading ? 'Refreshing…' : 'Try again'}</button></div>}
-        <div data-motion="stagger" className={styles.vehicleGrid}>{visible.map(v => { const discountPercent = v.discountPrice != null ? Math.round((v.price - v.discountPrice) / v.price * 100) : 0; return <article data-motion-item data-motion-hover="lift" className={styles.vehicleCard} key={v.id}><div className={styles.vehicleImage}><button type="button" onClick={event => openVehicle(v, event.currentTarget)} aria-label={`View ${v.title}`}><VehicleImage src={v.images[0] || '/images/parakh-journey.webp'} alt={v.title} fill sizes="(max-width: 760px) 100vw, 33vw" /></button><span className={styles.verifiedTag}><BadgeCheck aria-hidden="true" />{v.condition === 'certified_pre_owned' ? 'Parakh Certified' : 'Inspected'}</span>{discountPercent > 0 && <span className={styles.discountTag}>Save {discountPercent}%</span>}<button data-motion-press data-motion-feedback="heart" type="button" className={styles.saveCar} aria-label={`${shortlist.includes(v.id) ? 'Remove' : 'Save'} ${v.title} ${shortlist.includes(v.id) ? 'from' : 'to'} shortlist`} aria-pressed={shortlist.includes(v.id)} onClick={() => setShortlist(ids => ids.includes(v.id) ? ids.filter(id => id !== v.id) : [...ids, v.id])}><Heart fill={shortlist.includes(v.id) ? 'currentColor' : 'none'} aria-hidden="true" /></button></div><div className={styles.vehicleContent}><div className={styles.vehicleMeta}><span>{v.year} · {v.brand}</span><span><MapPin aria-hidden="true" />{v.location.split(',')[0]}</span></div><button data-motion-press type="button" className={styles.vehicleTitle} onClick={event => openVehicle(v, event.currentTarget)}><h3>{v.title}</h3></button><div className={styles.vehicleSpecs}><span><Gauge aria-hidden="true" />{formatMileage(v.mileage)}</span><span><Fuel aria-hidden="true" />{v.fuelType}</span><span><SlidersHorizontal aria-hidden="true" />{v.transmission}</span></div><div className={styles.vehicleBottom}><div className={styles.vehiclePriceGroup}><strong>{formatPKR(v.discountPrice ?? v.price)}</strong>{v.discountPrice != null && <del>{formatPKR(v.price)}</del>}</div><button data-motion-press type="button" onClick={event => openVehicle(v, event.currentTarget)} aria-label={`View details for ${v.title}`}><ArrowUpRight aria-hidden="true" /></button></div>{v.status === 'reserved' && <p className={styles.reserved}>Reserved · ask about availability</p>}</div></article>; })}</div>
+        <div data-motion="stagger" className={styles.vehicleGrid}>{visible.map(v => { const discountPercent = v.discountPrice != null ? Math.round((v.price - v.discountPrice) / v.price * 100) : 0; return <article data-motion-item data-motion-hover="lift" className={styles.vehicleCard} key={v.id}><div className={styles.vehicleImage}><button type="button" onClick={event => openVehicle(v, event.currentTarget)} aria-label={`Preview ${v.title}`}><VehicleImage src={v.images[0] || '/images/parakh-journey.webp'} alt={v.title} fill sizes="(max-width: 760px) 100vw, 33vw" /></button><span className={styles.verifiedTag}><BadgeCheck aria-hidden="true" />{v.condition === 'certified_pre_owned' ? 'Parakh Certified' : 'Inspected'}</span>{discountPercent > 0 && <span className={styles.discountTag}>Save {discountPercent}%</span>}<button data-motion-press data-motion-feedback="heart" type="button" className={styles.saveCar} aria-label={`${shortlist.includes(v.id) ? 'Remove' : 'Save'} ${v.title} ${shortlist.includes(v.id) ? 'from' : 'to'} shortlist`} aria-pressed={shortlist.includes(v.id)} onClick={() => setShortlist(ids => ids.includes(v.id) ? ids.filter(id => id !== v.id) : [...ids, v.id])}><Heart fill={shortlist.includes(v.id) ? 'currentColor' : 'none'} aria-hidden="true" /></button></div><div className={styles.vehicleContent}><div className={styles.vehicleMeta}><span>{v.year} · {v.brand}</span><span><MapPin aria-hidden="true" />{v.location.split(',')[0]}</span></div><Link data-motion-press className={styles.vehicleTitle} href={`/cars/${encodeURIComponent(v.id)}`}><h3>{v.title}</h3></Link><div className={styles.vehicleSpecs}><span><Gauge aria-hidden="true" />{formatMileage(v.mileage)}</span><span><Fuel aria-hidden="true" />{v.fuelType}</span><span><SlidersHorizontal aria-hidden="true" />{v.transmission}</span></div><div className={styles.vehicleBottom}><div className={styles.vehiclePriceGroup}><strong>{formatPKR(v.discountPrice ?? v.price)}</strong>{v.discountPrice != null && <del>{formatPKR(v.price)}</del>}</div><Link data-motion-press href={`/cars/${encodeURIComponent(v.id)}`} aria-label={`View details for ${v.title}`}><ArrowUpRight aria-hidden="true" /></Link></div>{v.status === 'reserved' && <p className={styles.reserved}>Reserved · ask about availability</p>}</div></article>; })}</div>
         {filtered.length === 0 && !inventoryLoading && !inventoryError && <div data-motion="reveal" className={styles.emptyState}><CarFront aria-hidden="true" /><h3>{shortlistOnly ? 'Your shortlist starts here.' : 'Your perfect match is still out there.'}</h3><p>{shortlistOnly ? 'Tap the heart on a car to save it here.' : 'Try another search, or let our team find it for you.'}</p><button data-motion-press className="btn-secondary" type="button" onClick={resetFilters}>Explore all cars <ArrowRight aria-hidden="true" /></button></div>}
         <div data-motion="reveal" className={styles.inventoryFooter}>{!showAll && !hasFilters && filtered.length > 3 && <button data-motion-press type="button" className="btn-secondary" onClick={() => setShowAll(true)}>View all {filtered.length} cars <ArrowUpRight aria-hidden="true" /></button>}<p>Haven’t found the one? <Link href="/client/car-finding">Let us find it for you <ArrowRight aria-hidden="true" /></Link></p></div>
       </section>
@@ -175,6 +180,6 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
       <section className={`${styles.section} container-custom ${styles.faqSection}`}><div data-motion="heading"><div className={styles.eyebrow}><span /> A LITTLE MORE CLARITY</div><h2 style={{ whiteSpace: 'pre-line' }}>{home.faqTitle}</h2><p>We’re here to make things clearer.<br />Need a personal answer?</p><Link data-motion-press href="/client/contact" className={styles.textLink}><MessageCircle aria-hidden="true" />Let’s talk <ArrowUpRight aria-hidden="true" /></Link></div><div data-motion="stagger" className={styles.questions}>{questions.map(q => <details data-motion-item data-motion-feedback="accordion" key={q.question}><summary>{q.question}<Plus className={styles.faqPlus} aria-hidden="true" /><Minus className={styles.faqMinus} aria-hidden="true" /></summary><p>{q.answer}</p></details>)}</div></section>
     </main>
     <SiteFooter />
-    <VehicleDetails vehicle={selected} returnFocusTo={vehicleTrigger} onClose={() => setSelected(null)} />
+    {selected && <Suspense fallback={null}><VehicleDetails vehicle={selected} returnFocusTo={vehicleTrigger} onClose={() => setSelected(null)} /></Suspense>}
   </MotionScene>;
 }

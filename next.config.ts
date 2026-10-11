@@ -3,6 +3,7 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  turbopack: { root: process.cwd() },
   serverExternalPackages: ['pg'],
   outputFileTracingIncludes: {
     '/*': ['./supabase/certs/prod-ca-2021.crt'],

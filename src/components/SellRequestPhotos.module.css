@@ -1,7 +1,30 @@
 .photos { margin-top: 12px; width: 168px; max-width: 100%; }
 .label { margin: 0 0 6px; color: var(--pm-muted); font-size: calc(10px * var(--pm-text-scale)); }
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 0; margin: 0; list-style: none; }
-.thumbnail { display: block; width: 100%; aspect-ratio: 1; min-height: 44px; overflow: hidden; background: var(--pm-soft); border: 1px solid var(--pm-line); border-radius: 4px; }
+.thumbnail { display: block; width: 100%; padding: 0; aspect-ratio: 1; overflow: hidden; background: var(--pm-soft); border: 1px solid var(--pm-line); border-radius: 4px; cursor: zoom-in; }
 .thumbnail img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .thumbnail:hover { border-color: var(--pm-green); }
 .thumbnail:focus-visible { outline: 2px solid var(--pm-green); outline-offset: 3px; }
+.viewer { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 24px; background: rgb(0 0 0 / 94%); backdrop-filter: blur(12px); animation: viewerFadeIn 180ms ease-out; }
+.viewerContent { position: relative; display: grid; place-items: center; width: 100%; height: 100%; }
+.fullImage { display: block; width: auto; height: auto; max-width: min(100%, 1500px); max-height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; animation: photoReveal 220ms ease-out; }
+.closeButton, .navButton { position: absolute; z-index: 1; display: grid; place-items: center; width: 48px; height: 48px; color: white; background: rgb(20 20 20 / 78%); border: 1px solid rgb(255 255 255 / 24%); border-radius: 50%; cursor: pointer; transition: background 160ms ease, transform 160ms ease; }
+.closeButton:hover, .navButton:hover { background: rgb(62 62 62 / 90%); transform: scale(1.06); }
+.closeButton:focus-visible, .navButton:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.closeButton { top: 0; right: 0; }
+.navButton { top: 50%; transform: translateY(-50%); }
+.navButton:hover { transform: translateY(-50%) scale(1.06); }
+.previousButton { left: 0; }
+.nextButton { right: 0; }
+.photoCount { position: absolute; bottom: 0; left: 50%; padding: 7px 12px; color: white; font-size: 13px; background: rgb(20 20 20 / 78%); border-radius: 999px; transform: translateX(-50%); }
+@keyframes viewerFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes photoReveal { from { opacity: .65; transform: scale(.985); } to { opacity: 1; transform: scale(1); } }
+@media (max-width: 600px) {
+  .viewer { padding: 12px; }
+  .closeButton, .navButton { width: 42px; height: 42px; }
+  .navButton { top: auto; bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .viewer, .fullImage { animation: none; }
+  .closeButton, .navButton { transition: none; }
+}

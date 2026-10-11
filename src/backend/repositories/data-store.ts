@@ -99,6 +99,16 @@ async function upsertTheme(theme: Theme, db: Executor): Promise<Theme> {
   const result = await db.query(`INSERT INTO public.themes (${entries.map(([, column]) => column).join(', ')}) VALUES (${entries.map((_, index) => `$${index + 1}`).join(', ')}) ON CONFLICT (id) DO UPDATE SET ${entries.filter(([key]) => key !== 'id').map(([, column]) => `${column} = EXCLUDED.${column}`).join(', ')}, updated_at = NOW() RETURNING *`, entries.map(([key]) => theme[key as keyof Theme]));
   return mapRow<Theme>(result.rows[0], themeFields);
 }
+async function ensurePaletteThemes(db: Executor) {
+  const palettes = defaultSiteData.themes.filter((theme) => theme.id.startsWith('palette-'));
+  for (const theme of palettes) {
+    const entries = Object.entries(themeFields);
+    await db.query(
+      `INSERT INTO public.themes (${entries.map(([, column]) => column).join(', ')}) VALUES (${entries.map((_, index) => `$${index + 1}`).join(', ')}) ON CONFLICT (id) DO NOTHING`,
+      entries.map(([key]) => theme[key as keyof Theme]),
+    );
+  }
+}
 
 function photoMetadata(row: Row): SellRequestPhoto {
   const requestId = String(row.request_id);
@@ -196,7 +206,12 @@ class DataStore {
   createFindRequest(value: Omit<FindCarRequest, 'id' | 'createdAt'>) { return insert<FindCarRequest>('find_requests', findFields, 'pm-find', value); }
   updateFindRequestStatus(id: string, status: FindCarRequest['status']) { return update<FindCarRequest>('find_requests', findFields, id, { status }); }
   deleteFindRequest(id: string) { return remove('find_requests', id); }
-  getThemes() { return list<Theme>('themes', themeFields); }
+  getThemes() {
+    return databaseTransaction(async (db) => {
+      await ensurePaletteThemes(db);
+      return list<Theme>('themes', themeFields, db);
+    });
+  }
   async getActiveTheme() {
     const result = await getDatabasePool().query('SELECT * FROM public.themes WHERE is_active = true ORDER BY id LIMIT 1');
     return result.rows[0] ? mapRow<Theme>(result.rows[0], themeFields) : defaultSiteData.themes[0];
@@ -257,7 +272,9 @@ class DataStore {
       return saveSettings({ ...current, ...knownUpdates }, db);
     });
   }
-  getAllData() {
+  async getAllData() {
+    // Seed the palettes before opening the read-only dashboard snapshot.
+    await databaseTransaction((db) => ensurePaletteThemes(db));
     return databaseTransaction(async (db) => {
       await db.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
       const vehicles = await list<Vehicle>('vehicles', vehicleFields, db);

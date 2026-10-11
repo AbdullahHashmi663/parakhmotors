@@ -46,6 +46,10 @@ try {
     }
     await client.query('INSERT INTO public.parakh_migrations (id) VALUES ($1)', [version]);
   }
+  // Add screenshot-inspired built-in palettes to existing databases as well as fresh installs.
+  for (const theme of source.themes.filter(theme => theme.id.startsWith('palette-'))) {
+    await insert(client, 'themes', theme);
+  }
   await client.query('COMMIT');
   const counts = {};
   for (const table of ['vehicles', 'themes', 'dealership_settings', 'inspections', 'inquiries', 'sell_requests', 'find_requests']) {

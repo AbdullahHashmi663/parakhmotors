@@ -7,7 +7,7 @@
 .thumbnail:focus-visible { outline: 2px solid var(--pm-green); outline-offset: 3px; }
 .viewer { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 24px; background: rgb(0 0 0 / 94%); backdrop-filter: blur(12px); animation: viewerFadeIn 180ms ease-out; }
 .viewerContent { position: relative; display: grid; place-items: center; width: 100%; height: 100%; }
-.fullImage { display: block; width: auto; height: auto; max-width: min(100%, 1500px); max-height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; animation: photoReveal 220ms ease-out; }
+.fullImage { display: block; width: auto; height: auto; max-width: min(82vw, 1500px); max-height: 82vh; object-fit: contain; user-select: none; -webkit-user-drag: none; animation: photoReveal 220ms ease-out; }
 .closeButton, .navButton { position: absolute; z-index: 1; display: grid; place-items: center; width: 48px; height: 48px; color: white; background: rgb(20 20 20 / 78%); border: 1px solid rgb(255 255 255 / 24%); border-radius: 50%; cursor: pointer; transition: background 160ms ease, transform 160ms ease; }
 .closeButton:hover, .navButton:hover { background: rgb(62 62 62 / 90%); transform: scale(1.06); }
 .closeButton:focus-visible, .navButton:focus-visible { outline: 2px solid white; outline-offset: 3px; }
@@ -21,6 +21,7 @@
 @keyframes photoReveal { from { opacity: .65; transform: scale(.985); } to { opacity: 1; transform: scale(1); } }
 @media (max-width: 600px) {
   .viewer { padding: 12px; }
+  .fullImage { max-width: 90vw; max-height: 78vh; }
   .closeButton, .navButton { width: 42px; height: 42px; }
   .navButton { top: auto; bottom: 0; }
 }

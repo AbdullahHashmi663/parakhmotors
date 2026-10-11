@@ -142,7 +142,7 @@ export function SiteNavbar() {
         menuButton.current?.focus();
       }
     }}>
-      <div className={styles.announcement}>
+      {contact.announcement && <div className={styles.announcement}>
         <div className={styles.announcementInner}>
           <span>{contact.announcement}</span>
           <div className={styles.announcementContact}>
@@ -150,7 +150,7 @@ export function SiteNavbar() {
             <a href={phoneHref}><Phone size={12} aria-hidden="true" /> {contact.phone}</a>
           </div>
         </div>
-      </div>
+      </div>}
       <div className={styles.navInner}>
         <Link href="/" className={styles.brand} aria-label="Parakh Motors home" onClick={() => setMenuOpen(false)}>
           <BrandLogo />

@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useDealershipSettings } from './useDealershipSettings';
 import styles from './WhatsAppButton.module.css';
+import { whatsappHref } from '@/lib/site-content';
 
 export function WhatsAppButton() {
   const pathname = usePathname();
@@ -13,9 +14,7 @@ export function WhatsAppButton() {
     return null;
   }
 
-  const cleanNumber = (contact.whatsapp || '+923218466662').replace(/\D/g, '');
-  const prefilledMessage = encodeURIComponent('Hello Parakh Motors, I would like to inquire about your services and vehicles.');
-  const whatsappUrl = `https://wa.me/${cleanNumber}?text=${prefilledMessage}`;
+  const whatsappUrl = whatsappHref(contact);
 
   return (
     <aside className={styles.wrapper} aria-label="WhatsApp Concierge">
@@ -24,7 +23,7 @@ export function WhatsAppButton() {
         target="_blank"
         rel="noopener noreferrer"
         className={styles.button}
-        aria-label="Chat with Parakh Motors on WhatsApp"
+        aria-label={`Chat with ${contact.dealershipName} on WhatsApp`}
         data-motion-press
       >
         <span className={styles.pulseRing} aria-hidden="true" />

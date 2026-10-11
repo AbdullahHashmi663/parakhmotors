@@ -9,6 +9,10 @@
     "lint": "eslint",
     "db:check": "node scripts/check-database.mjs",
     "db:setup": "node scripts/setup-database.mjs",
+    "db:migrate:content": "node scripts/migrate-website-content.mjs",
+    "db:migrate:photos": "node scripts/migrate-sell-photos.mjs",
+    "test:content": "node scripts/verify-website-content.mjs",
+    "test:sell-photos": "node scripts/verify-sell-photos.mjs",
     "test:integration": "node scripts/verify-integration.mjs"
   },
   "dependencies": {
@@ -20,7 +24,8 @@
     "next": "16.4.0",
     "pg": "^8.23.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@types/node": "^20",

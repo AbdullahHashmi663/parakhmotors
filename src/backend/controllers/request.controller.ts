@@ -4,6 +4,7 @@ import { requireAdmin } from '../auth';
 import { successResponse } from '../utils/api-response';
 import { handleApiError } from '../utils/api-error';
 import { readJsonObject } from '../utils/validation';
+import { readSellRequestSubmission } from '../utils/sell-photo-upload';
 
 export class RequestController {
   static async handleGetSellRequests(request: NextRequest) {
@@ -16,7 +17,8 @@ export class RequestController {
 
   static async handleSubmitSellRequest(request: NextRequest) {
     try {
-      const sellRequest = await RequestService.submitSellRequest(await readJsonObject(request));
+      const { details, photos } = await readSellRequestSubmission(request);
+      const sellRequest = await RequestService.submitSellRequest(details, photos);
       return successResponse(sellRequest, { message: 'Sell car evaluation request submitted successfully', status: 201 });
     } catch (error) { return handleApiError(error); }
   }

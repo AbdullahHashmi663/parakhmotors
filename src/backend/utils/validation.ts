@@ -1,11 +1,11 @@
 import { ApiError } from './api-error';
 
-export async function readJsonObject(request: Request): Promise<Record<string, unknown>> {
+export async function readJsonObject(request: Request, maxBytes = 64 * 1024): Promise<Record<string, unknown>> {
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > 1024 * 1024) throw new RangeError('Invalid JSON request size limit');
   if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
     throw ApiError.badRequest('Use application/json for this request');
   }
-  const limit = 64 * 1024;
-  if (Number(request.headers.get('content-length')) > limit) {
+  if (Number(request.headers.get('content-length')) > maxBytes) {
     throw new ApiError('Request body is too large', 413, 'PAYLOAD_TOO_LARGE');
   }
   const reader = request.body?.getReader();
@@ -16,7 +16,7 @@ export async function readJsonObject(request: Request): Promise<Record<string, u
     const { done, value } = await reader.read();
     if (done) break;
     size += value.byteLength;
-    if (size > limit) {
+    if (size > maxBytes) {
       await reader.cancel();
       throw new ApiError('Request body is too large', 413, 'PAYLOAD_TOO_LARGE');
     }

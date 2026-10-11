@@ -7,6 +7,8 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { SiteMotion } from '@/components/SiteMotion';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
+import { DealershipSettingsProvider } from '@/components/useDealershipSettings';
+import { defaultDealershipSettings } from '@/lib/dealership-settings';
 
 import { cacheTag } from 'next/cache';
 import { dataStore } from '@/backend/repositories/data-store';
@@ -27,13 +29,15 @@ export const metadata: Metadata = {
 async function getThemeData() {
   'use cache';
   cacheTag('themes');
+  cacheTag('site-content');
   const activeTheme = await dataStore.getActiveTheme().catch(() => defaultThemes[0]);
   const themes = await dataStore.getThemes().catch(() => defaultThemes);
-  return { activeTheme, themes };
+  const settings = await dataStore.getSettings().catch(() => defaultDealershipSettings);
+  return { activeTheme, themes, settings };
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { activeTheme, themes } = await getThemeData();
+  const { activeTheme, themes, settings } = await getThemeData();
   const { tokens, mode } = createThemeTokens(activeTheme);
 
   const themeTokensCss = Object.entries(tokens)
@@ -72,10 +76,12 @@ ${themeTokensCss}
         <Suspense fallback={null}>
           <ScrollToTop />
           <SiteMotion />
-          <WhatsAppButton />
         </Suspense>
         <ThemeProvider initialActiveTheme={activeTheme} initialThemes={themes}>
-          {children}
+          <DealershipSettingsProvider initialSettings={settings}>
+            <WhatsAppButton />
+            {children}
+          </DealershipSettingsProvider>
         </ThemeProvider>
       </body>
     </html>

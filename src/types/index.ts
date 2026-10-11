@@ -1,3 +1,5 @@
+import type { SiteContent } from '@/lib/site-content';
+
 export type VehicleCondition = 'certified_pre_owned' | 'used' | 'brand_new';
 export type FuelType = 'petrol' | 'diesel' | 'hybrid' | 'electric';
 export type TransmissionType = 'automatic' | 'manual';
@@ -81,6 +83,14 @@ export interface CustomerInquiry {
   createdAt: string;
 }
 
+export interface SellRequestPhoto {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+  size: number;
+}
+
 export interface SellCarRequest {
   id: string;
   sellerName: string;
@@ -95,6 +105,7 @@ export interface SellCarRequest {
   estimatedMarketValueMin: number;
   estimatedMarketValueMax: number;
   conditionDescription?: string;
+  photos?: SellRequestPhoto[];
   status: 'received' | 'valuation_provided' | 'inspection_scheduled' | 'listed';
   createdAt: string;
 }
@@ -166,5 +177,6 @@ export interface DealershipSettings {
   heroHeadline: string;
   heroSubheadline: string;
   activeThemeId: string;
+  websiteContent: SiteContent;
 }
 

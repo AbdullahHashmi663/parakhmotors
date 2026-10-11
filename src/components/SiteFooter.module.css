@@ -70,3 +70,5 @@
   .linkColumn a { transition: none; }
   .contactButton:is(:hover,:focus-visible) svg, .whatsapp:is(:hover,:focus-visible) svg:last-child, .bottom a:is(:hover,:focus-visible) svg { translate: none; }
 }
+.social { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+.social a { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; font-size: 12px; }

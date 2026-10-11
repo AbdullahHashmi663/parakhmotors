@@ -30,6 +30,8 @@ explains the alternatives.
 
 Run `npm run db:check` to verify connectivity without changing data.
 Run `npm run db:setup` to apply the transactional initial schema and migration.
+For an existing installation, run `npm run db:migrate:content` to add storage for
+the Website editor. This adds a column without overwriting existing records.
 The migration inserts missing records, preserves existing IDs, records completion,
 and does not repeat seeding on subsequent runs. The six known demonstration
 customer records are excluded. Existing non-demo local submissions are preserved.
@@ -50,3 +52,6 @@ another local test port.
 
 The forms record requests for the dealership team. Confirming appointments,
 reviewing valuations and arranging sourcing/payment remain team-managed steps.
+# Selling request photos
+
+For an existing database, run `npm run db:migrate:photos` to add private photo attachments for seller requests. See [selling request photos](sell-car-photos.md) for usage and verification.

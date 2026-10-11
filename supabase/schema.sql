@@ -99,6 +99,21 @@ CREATE TABLE IF NOT EXISTS public.sell_requests (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 5B. SELL REQUEST PHOTOS
+-- Private uploads belong to a selling request and are deleted with it.
+CREATE TABLE IF NOT EXISTS public.sell_request_photos (
+  id UUID PRIMARY KEY,
+  request_id TEXT NOT NULL REFERENCES public.sell_requests(id) ON DELETE CASCADE,
+  image_data BYTEA NOT NULL,
+  mime_type TEXT NOT NULL DEFAULT 'image/webp' CHECK (mime_type = 'image/webp'),
+  width INTEGER NOT NULL CHECK (width BETWEEN 1 AND 1600),
+  height INTEGER NOT NULL CHECK (height BETWEEN 1 AND 1200),
+  size INTEGER NOT NULL CHECK (size BETWEEN 1 AND 524288 AND size = octet_length(image_data)),
+  position INTEGER NOT NULL CHECK (position BETWEEN 0 AND 5),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (request_id, position)
+);
+
 -- 6. CAR FINDER REQUESTS
 CREATE TABLE IF NOT EXISTS public.find_requests (
   id TEXT PRIMARY KEY,
@@ -130,8 +145,12 @@ CREATE TABLE IF NOT EXISTS public.dealership_settings (
   hero_headline TEXT DEFAULT 'PAKISTAN''S PREMIER CURATED LUXURY AUTOMOTIVE DEALERSHIP',
   hero_subheadline TEXT DEFAULT 'Uncompromising luxury, certified forensic inspections, and verified ownership history.',
   active_theme_id TEXT DEFAULT 'parakh-rosso',
+  website_content JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Allows the schema to be applied to an existing deployment without replacing settings.
+ALTER TABLE public.dealership_settings ADD COLUMN IF NOT EXISTS website_content JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 -- ENABLE ROW LEVEL SECURITY
 ALTER TABLE public.themes ENABLE ROW LEVEL SECURITY;
@@ -139,6 +158,7 @@ ALTER TABLE public.vehicles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inspections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sell_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sell_request_photos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.find_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dealership_settings ENABLE ROW LEVEL SECURITY;
 
@@ -156,7 +176,7 @@ DROP POLICY IF EXISTS "Public Insert Inspections" ON public.inspections;
 DROP POLICY IF EXISTS "Public Insert Sell Requests" ON public.sell_requests;
 DROP POLICY IF EXISTS "Public Insert Find Requests" ON public.find_requests;
 REVOKE ALL ON public.themes, public.vehicles, public.dealership_settings,
-  public.inspections, public.inquiries, public.sell_requests, public.find_requests FROM anon, authenticated;
+  public.inspections, public.inquiries, public.sell_requests, public.sell_request_photos, public.find_requests FROM anon, authenticated;
 GRANT SELECT ON public.themes, public.vehicles, public.dealership_settings TO anon, authenticated;
 
 CREATE UNIQUE INDEX IF NOT EXISTS themes_one_active ON public.themes (is_active) WHERE is_active;

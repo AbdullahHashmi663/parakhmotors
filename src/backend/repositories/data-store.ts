@@ -1,9 +1,11 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
-import type { Vehicle, InspectionBooking, CustomerInquiry, SellCarRequest, FindCarRequest, Theme, DealershipSettings } from '@/types';
+import type { Vehicle, InspectionBooking, CustomerInquiry, SellCarRequest, SellRequestPhoto, FindCarRequest, Theme, DealershipSettings } from '@/types';
 import { databaseTransaction, getDatabasePool } from '@/backend/database';
 import { defaultSiteData } from './seed-data';
+import { normalizeSiteContent } from '@/lib/site-content';
+import type { ProcessedSellPhoto } from '@/backend/utils/sell-photo-upload';
 
 type Fields = Record<string, string>;
 type Executor = Pick<PoolClient, 'query'>;
@@ -40,7 +42,7 @@ const themeFields: Fields = {
 const settingsFields: Fields = {
   dealershipName: 'dealership_name', tagline: 'tagline', phone: 'phone', whatsapp: 'whatsapp', email: 'email', address: 'address',
   workingHours: 'working_hours', announcement: 'announcement', currency: 'currency', heroHeadline: 'hero_headline',
-  heroSubheadline: 'hero_subheadline', activeThemeId: 'active_theme_id',
+  heroSubheadline: 'hero_subheadline', activeThemeId: 'active_theme_id', websiteContent: 'website_content',
 };
 const numberFields = new Set(['year', 'price', 'mileage', 'inspectionScore', 'carYear', 'estimatedFee', 'expectedPrice',
   'estimatedMarketValueMin', 'estimatedMarketValueMax', 'minYear', 'budgetMax']);
@@ -48,6 +50,10 @@ function mapRow<T>(row: Row, fields: Fields): T {
   const mapped: Row = {};
   for (const [name, column] of Object.entries(fields)) {
     const value = row[column];
+    if (name === 'websiteContent') {
+      mapped[name] = normalizeSiteContent(value);
+      continue;
+    }
     mapped[name] = value instanceof Date ? value.toISOString() : value === null ? (name === 'description' ? '' : undefined)
       : numberFields.has(name) ? Number(value) : value;
   }
@@ -94,6 +100,26 @@ async function upsertTheme(theme: Theme, db: Executor): Promise<Theme> {
   return mapRow<Theme>(result.rows[0], themeFields);
 }
 
+function photoMetadata(row: Row): SellRequestPhoto {
+  const requestId = String(row.request_id);
+  const id = String(row.id);
+  return { id, url: `/api/sell-requests/${encodeURIComponent(requestId)}/photos/${encodeURIComponent(id)}`, width: Number(row.width), height: Number(row.height), size: Number(row.size) };
+}
+
+async function attachSellPhotos(requests: SellCarRequest[], db: Executor = getDatabasePool()): Promise<SellCarRequest[]> {
+  if (!requests.length) return [];
+  // Admin list responses contain metadata only; image bytes are served by a separate authenticated route.
+  const result = await db.query('SELECT id, request_id, width, height, size FROM public.sell_request_photos WHERE request_id = ANY($1::text[]) ORDER BY request_id, position', [requests.map((request) => request.id)]);
+  const byRequest = new Map<string, SellRequestPhoto[]>();
+  for (const row of result.rows as Row[]) {
+    const requestId = String(row.request_id);
+    const photos = byRequest.get(requestId) ?? [];
+    photos.push(photoMetadata(row));
+    byRequest.set(requestId, photos);
+  }
+  return requests.map((request) => ({ ...request, photos: byRequest.get(request.id) ?? [] }));
+}
+
 class DataStore {
   getVehicles() { return list<Vehicle>('vehicles', vehicleFields); }
   getVehicleById(id: string) { return get<Vehicle>('vehicles', vehicleFields, id); }
@@ -109,9 +135,27 @@ class DataStore {
   createInquiry(value: Omit<CustomerInquiry, 'id' | 'createdAt'>) { return insert<CustomerInquiry>('inquiries', inquiryFields, 'pm-inq', value); }
   updateInquiryStatus(id: string, status: CustomerInquiry['status']) { return update<CustomerInquiry>('inquiries', inquiryFields, id, { status }); }
   deleteInquiry(id: string) { return remove('inquiries', id); }
-  getSellRequests() { return list<SellCarRequest>('sell_requests', sellFields); }
-  createSellRequest(value: Omit<SellCarRequest, 'id' | 'createdAt'>) { return insert<SellCarRequest>('sell_requests', sellFields, 'pm-sell', value); }
-  updateSellRequestStatus(id: string, status: SellCarRequest['status']) { return update<SellCarRequest>('sell_requests', sellFields, id, { status }); }
+  async getSellRequests() { return attachSellPhotos(await list<SellCarRequest>('sell_requests', sellFields)); }
+  createSellRequest(value: Omit<SellCarRequest, 'id' | 'createdAt' | 'photos'>, photos: ProcessedSellPhoto[] = []): Promise<SellCarRequest> {
+    return databaseTransaction(async (db) => {
+      const request = await insert<SellCarRequest>('sell_requests', sellFields, 'pm-sell', value, db);
+      const savedPhotos: SellRequestPhoto[] = [];
+      for (const [position, photo] of photos.entries()) {
+        const id = randomUUID();
+        const result = await db.query('INSERT INTO public.sell_request_photos (id, request_id, image_data, mime_type, width, height, size, position) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, request_id, width, height, size', [id, request.id, photo.data, photo.mimeType, photo.width, photo.height, photo.size, position]);
+        savedPhotos.push(photoMetadata(result.rows[0]));
+      }
+      return { ...request, photos: savedPhotos };
+    });
+  }
+  async updateSellRequestStatus(id: string, status: SellCarRequest['status']) {
+    const request = await update<SellCarRequest>('sell_requests', sellFields, id, { status });
+    return request ? (await attachSellPhotos([request]))[0] : null;
+  }
+  async getSellRequestPhoto(requestId: string, photoId: string): Promise<{ data: Buffer; mimeType: 'image/webp' } | undefined> {
+    const result = await getDatabasePool().query('SELECT p.image_data, p.mime_type FROM public.sell_request_photos p INNER JOIN public.sell_requests r ON r.id = p.request_id WHERE r.id = $1 AND p.id = $2::uuid', [requestId, photoId]);
+    return result.rows[0] ? { data: result.rows[0].image_data as Buffer, mimeType: 'image/webp' } : undefined;
+  }
   deleteSellRequest(id: string) { return remove('sell_requests', id); }
   getFindRequests() { return list<FindCarRequest>('find_requests', findFields); }
   createFindRequest(value: Omit<FindCarRequest, 'id' | 'createdAt'>) { return insert<FindCarRequest>('find_requests', findFields, 'pm-find', value); }
@@ -184,7 +228,7 @@ class DataStore {
       const vehicles = await list<Vehicle>('vehicles', vehicleFields, db);
       const inspections = await list<InspectionBooking>('inspections', inspectionFields, db);
       const inquiries = await list<CustomerInquiry>('inquiries', inquiryFields, db);
-      const sellRequests = await list<SellCarRequest>('sell_requests', sellFields, db);
+      const sellRequests = await attachSellPhotos(await list<SellCarRequest>('sell_requests', sellFields, db), db);
       const findRequests = await list<FindCarRequest>('find_requests', findFields, db);
       const themes = await list<Theme>('themes', themeFields, db);
       const settings = await get<DealershipSettings>('dealership_settings', settingsFields, 'main_settings', db);

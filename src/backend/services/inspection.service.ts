@@ -1,9 +1,8 @@
 import { dataStore } from '../repositories/data-store';
 import { ApiError } from '../utils/api-error';
 import { contactFields, enumField, inspectionStatuses, numberField, resourceId, textField } from '../utils/validation';
-import type { InspectionBooking, InspectionPackage } from '@/types';
-
-const PACKAGE_FEES: Record<InspectionPackage, number> = { basic: 7000, comprehensive: 18000, premium: 25000, deal_package: 30000 };
+import type { InspectionBooking } from '@/types';
+import { getServicePackage } from '@/lib/site-content';
 
 export class InspectionService {
   static async getAllInspections(status?: InspectionBooking['status']) {
@@ -30,10 +29,13 @@ export class InspectionService {
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Karachi', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     if (preferredDate < today) throw ApiError.badRequest('Choose today or a future inspection date');
     const packageType = enumField(raw.packageType, ['basic', 'comprehensive', 'premium', 'deal_package'] as const, 'inspection package');
+    const settings = await dataStore.getSettings();
+    const selectedPackage = getServicePackage(settings.websiteContent, packageType);
+    if (!selectedPackage?.enabled) throw ApiError.badRequest('This inspection package is currently unavailable. Please choose another package or contact our team.');
     const preferredTimeSlot = textField(raw, 'preferredTimeSlot', { optional: true, max: 80 });
     const locationAddress = textField(raw, 'locationAddress', { optional: true, max: 500 });
     const notes = textField(raw, 'notes', { optional: true, max: 5000 });
-    return await dataStore.createInspection({ customerName, email, phone, city, carMake, carModel, carYear, packageType, preferredDate, preferredTimeSlot: preferredTimeSlot || undefined, locationAddress: locationAddress || undefined, estimatedFee: PACKAGE_FEES[packageType], notes: notes || undefined, status: 'pending' });
+    return await dataStore.createInspection({ customerName, email, phone, city, carMake, carModel, carYear, packageType, preferredDate, preferredTimeSlot: preferredTimeSlot || undefined, locationAddress: locationAddress || undefined, estimatedFee: selectedPackage.price, notes: notes || undefined, status: 'pending' });
   }
 
   static async updateStatus(id: string, status: unknown, notes?: string) {

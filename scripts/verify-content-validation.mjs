@@ -1,0 +1,100 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import vm from 'node:vm';
+import ts from 'typescript';
+
+const nodeRequire = createRequire(import.meta.url);
+const cache = new Map();
+const mockStore = {};
+function load(sourcePath) {
+  const filename = path.resolve(sourcePath);
+  if (cache.has(filename)) return cache.get(filename).exports;
+  const loadedModule = { exports: {} };
+  cache.set(filename, loadedModule);
+  const compiled = ts.transpileModule(readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText;
+  const localRequire = (specifier) => {
+    if (specifier.endsWith('/repositories/data-store')) return { dataStore: mockStore };
+    if (specifier.startsWith('@/')) return load(path.join('src', specifier.slice(2) + '.ts'));
+    if (specifier.startsWith('.')) return load(path.resolve(path.dirname(filename), specifier + '.ts'));
+    return nodeRequire(specifier);
+  };
+  vm.runInThisContext(`(function(require,module,exports){${compiled}\n})`, { filename })(localRequire, loadedModule, loadedModule.exports);
+  return loadedModule.exports;
+}
+
+const { defaultSiteContent, normalizeSiteContent } = load('src/lib/site-content.ts');
+const { validateSiteContent } = load('src/backend/utils/site-content-validation.ts');
+const { InspectionService } = load('src/backend/services/inspection.service.ts');
+const { RequestService } = load('src/backend/services/request.service.ts');
+const { readJsonObject } = load('src/backend/utils/validation.ts');
+let checks = 0;
+const cloned = () => structuredClone(defaultSiteContent);
+const valid = (mutate = () => {}) => { const content = cloned(); mutate(content); validateSiteContent(content); checks++; };
+const invalid = (mutate) => { const content = cloned(); mutate(content); assert.throws(() => validateSiteContent(content), (error) => error.statusCode === 400); checks++; };
+
+valid();
+valid((content) => { content.services = []; content.home.faq = []; content.pages.inspection.extras.formAside.rows = [{ title: 'New instruction', description: 'New details' }]; });
+valid((content) => { content.services = [{ ...content.services[0], id: 'new-service', packageIds: [], href: '/client/contact' }]; });
+valid((content) => { content.packages.reverse(); content.contact.mapsUrl = 'https://maps.google.com/?q=Lahore'; content.home.heroImage = '/images/hero-drive.webp'; });
+assert.equal(normalizeSiteContent({ sourcing: { minimumBudget: 5000000 } }).sourcing.minimumBudget, 5000000); checks++;
+assert.equal(normalizeSiteContent({ sourcing: { minimumBudget: 5000000 } }).sourcing.highBudgetThreshold, defaultSiteContent.sourcing.highBudgetThreshold); checks++;
+invalid((content) => { content.packages.pop(); });
+invalid((content) => { content.packages[1].id = content.packages[0].id; });
+invalid((content) => { content.packages[0].kind = 'selling'; });
+invalid((content) => { content.packages[0].price = -1; });
+invalid((content) => { content.packages[0].price = 1.5; });
+invalid((content) => { content.packages[0].enabled = 'yes'; });
+invalid((content) => { content.services[1].id = content.services[0].id; });
+invalid((content) => { content.services[0].packageIds = ['unknown']; });
+invalid((content) => { content.services[0].href = 'javascript:alert(1)'; });
+invalid((content) => { content.services[0].href = '/nonexistent-page'; });
+invalid((content) => { content.home.heroImage = 'https://unapproved.example/image.jpg'; });
+invalid((content) => { content.home.heroImage = '//evil.example/image.jpg'; });
+invalid((content) => { content.home.heroImage = '/images/../api/admin/data'; });
+invalid((content) => { content.home.heroImage = 'http://images.unsplash.com/image.jpg'; });
+invalid((content) => { content.contact.mapsUrl = 'data:text/html,unsafe'; });
+invalid((content) => { content.contact.instagramUrl = 'https://name:password@example.com'; });
+invalid((content) => { content.contact.facebookUrl = '/untrusted-local-path'; });
+invalid((content) => { content.pages.inspection.extras.formAside.rows = ['wrong shape']; });
+invalid((content) => { content.pages.inspection.faq = [{ question: 'Missing answer' }]; });
+invalid((content) => { delete content.pages.contact; });
+invalid((content) => { content.home.unexpected = 'unsupported'; });
+invalid((content) => { content.sourcing.highBudgetThreshold = content.sourcing.minimumBudget - 1; });
+
+let savedContent = cloned();
+mockStore.getSettings = async () => ({ websiteContent: savedContent });
+mockStore.createInspection = async (booking) => booking;
+mockStore.createSellRequest = async (request) => request;
+mockStore.createFindRequest = async (request) => request;
+const contact = { email: 'content-test@example.invalid', phone: '03001234567' };
+const inspection = { ...contact, customerName: 'Content verification', city: 'Lahore', carMake: 'Toyota', carModel: 'Corolla', carYear: 2022, packageType: 'basic', preferredDate: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10), estimatedFee: 1 };
+savedContent.packages.find((item) => item.id === 'basic').price = 9123;
+assert.equal((await InspectionService.bookInspection(inspection)).estimatedFee, 9123); checks++;
+savedContent.packages.find((item) => item.id === 'basic').enabled = false;
+await assert.rejects(InspectionService.bookInspection(inspection), (error) => error.statusCode === 400); checks++;
+const sell = { ...contact, sellerName: 'Content verification', city: 'Lahore', brand: 'Toyota', model: 'Corolla', year: 2022, mileage: 25000, expectedPrice: 5000000, packageType: 'sell_outside' };
+savedContent.packages.find((item) => item.id === 'sell_outside').price = 33333;
+assert.match((await RequestService.submitSellRequest(sell)).conditionDescription, /33,333/); checks++;
+savedContent.packages.find((item) => item.id === 'sell_outside').enabled = false;
+await assert.rejects(RequestService.submitSellRequest(sell), (error) => error.statusCode === 400); checks++;
+const finder = { ...contact, buyerName: 'Content verification', targetBrand: 'Toyota', targetModel: 'Corolla', minYear: 2022, budgetMax: 6500000, preferredCity: 'Lahore' };
+savedContent.sourcing.minimumBudget = 6000000;
+savedContent.sourcing.highBudgetThreshold = 8000000;
+savedContent.packages.find((item) => item.id === 'under_1cr').price = 54321;
+assert.match((await RequestService.submitFindRequest(finder)).notes, /54,321/); checks++;
+await assert.rejects(RequestService.submitFindRequest({ ...finder, budgetMax: 5000000 }), (error) => error.statusCode === 400); checks++;
+savedContent.packages.find((item) => item.id === 'above_1cr').enabled = false;
+await assert.rejects(RequestService.submitFindRequest({ ...finder, budgetMax: 9000000 }), (error) => error.statusCode === 400); checks++;
+
+// A full CMS draft can grow beyond a customer submission while both stay bounded.
+const jsonRequest = (body, headers = {}) => new Request('http://localhost/api/admin/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json', ...headers }, body });
+const largeDraft = JSON.stringify({ text: 'A'.repeat(128 * 1024) });
+await assert.rejects(readJsonObject(jsonRequest(largeDraft)), (error) => error.statusCode === 413); checks++;
+assert.equal((await readJsonObject(jsonRequest(largeDraft), 512 * 1024)).text.length, 128 * 1024); checks++;
+await assert.rejects(readJsonObject(jsonRequest(JSON.stringify({ text: 'A'.repeat(600 * 1024) }), { 'Content-Length': '1' }), 512 * 1024), (error) => error.statusCode === 413); checks++;
+await assert.rejects(readJsonObject(jsonRequest(JSON.stringify({ text: '漢'.repeat(200 * 1024) })), 512 * 1024), (error) => error.statusCode === 413); checks++;
+await assert.rejects(readJsonObject(jsonRequest('{}', { 'Content-Length': String(600 * 1024) }), 512 * 1024), (error) => error.statusCode === 413); checks++;
+await assert.rejects(readJsonObject(jsonRequest('{}'), 512.5), RangeError); checks++;
+console.log(JSON.stringify({ result: 'passed', checks, scope: 'Website content validation and authoritative service pricing' }));

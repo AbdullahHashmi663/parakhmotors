@@ -31,3 +31,7 @@ Text and action foregrounds are derived for readable contrast. Custom card backg
 ## Page opening behavior
 
 Initial headings, navigation, hero images and admin content stay visible during hydration. Scroll reveals start only for committed content below the viewport, and their styles revert on navigation or keyboard focus. The homepage mounts once and loads inventory inside its collection section. Plain page openings and refreshes begin at the top; explicit section links retain their anchors.
+
+## Admin website management
+
+Website editor manages services and package fees, availability, sourcing budget rules, contact/WhatsApp/map/social/payment details, homepage content, all customer-page introductions and FAQs, company story/statistics, footer text and privacy sections. Booking routes use saved package fees and preserve the fee on each request. See `website-editor.md` for administration and deployment instructions.

@@ -1,5 +1,6 @@
 import type { Vehicle, DealershipSettings } from '@/types';
 import { defaultThemes } from '@/lib/themes';
+import { defaultSiteContent } from '@/lib/site-content';
 
 const initialVehicles: Vehicle[] = [
   {
@@ -216,6 +217,7 @@ const defaultSettings: DealershipSettings = {
   heroHeadline: 'A better drive. Starts with trust.',
   heroSubheadline: 'Great cars. Honest advice. Complete peace of mind. Your next chapter deserves a better beginning.',
   activeThemeId: 'parakh-rosso',
+  websiteContent: defaultSiteContent,
 };
 
 export const defaultSiteData = { vehicles: initialVehicles, themes: defaultThemes, settings: defaultSettings };

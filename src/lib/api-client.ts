@@ -37,7 +37,7 @@ interface AdminDataResponse {
 async function requestJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const headers = new Headers(options?.headers);
-  if (options?.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (options?.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   let response: Response;
   try {
     response = await fetch(url, { cache: 'no-store', ...options, headers });
@@ -178,11 +178,20 @@ export const api = {
       mileage: number;
       expectedPrice: number;
       conditionDescription?: string;
-    }) =>
-      fetcher<SellCarRequest>('/api/sell-requests', {
+      packageType?: 'ad_posting' | 'sell_lahore' | 'sell_outside' | 'investor';
+    }, photos: File[] = []) => {
+      let body: string | FormData = JSON.stringify(data);
+      if (photos.length) {
+        const multipart = new FormData();
+        multipart.set('details', JSON.stringify(data));
+        photos.forEach(photo => multipart.append('photos', photo));
+        body = multipart;
+      }
+      return fetcher<SellCarRequest>('/api/sell-requests', {
         method: 'POST',
-        body: JSON.stringify(data),
-      }),
+        body,
+      });
+    },
   },
 
   carFinder: {
@@ -233,11 +242,17 @@ export const api = {
     deleteTheme: (themeId: string) =>
       requestJson<{ success: boolean }>(`/api/admin/themes?id=${encodeURIComponent(themeId)}`, { method: 'DELETE' }),
     getSettings: () => fetcher<DealershipSettings>('/api/admin/settings'),
-    updateSettings: (settings: Partial<DealershipSettings>) =>
-      fetcher<DealershipSettings>('/api/admin/settings', {
+    updateSettings: async (settings: Partial<DealershipSettings>) => {
+      const response = await fetcher<DealershipSettings>('/api/admin/settings', {
         method: 'PUT',
         body: JSON.stringify(settings),
-      }),
+      });
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('parakh:settings-updated', { detail: response.data }));
+        try { localStorage.setItem('pm_settings_updated', String(Date.now())); } catch {}
+      }
+      return response;
+    },
     deleteInspection: (id: string) => fetcher<{ deletedId: string }>(`/api/inspections/${id}`, { method: 'DELETE' }),
     deleteInquiry: (id: string) => fetcher<{ deletedId: string }>(`/api/inquiries/${id}`, { method: 'DELETE' }),
     updateSellRequest: (id: string, status: string) =>

@@ -76,7 +76,17 @@ savedContent.packages.find((item) => item.id === 'basic').enabled = false;
 await assert.rejects(InspectionService.bookInspection(inspection), (error) => error.statusCode === 400); checks++;
 const sell = { ...contact, sellerName: 'Content verification', city: 'Lahore', brand: 'Toyota', model: 'Corolla', year: 2022, mileage: 25000, expectedPrice: 5000000, packageType: 'sell_outside' };
 savedContent.packages.find((item) => item.id === 'sell_outside').price = 33333;
-assert.match((await RequestService.submitSellRequest(sell)).conditionDescription, /33,333/); checks++;
+const legacySellerRequest = await RequestService.submitSellRequest(sell);
+assert.match(legacySellerRequest.conditionDescription, /33,333/); checks++;
+assert.equal(legacySellerRequest.model, 'Corolla'); checks++;
+// The simplified selling form sends the full vehicle name without a model field.
+const vehicleNameSubmission = { ...sell, brand: 'Toyota Corolla Altis', conditionDescription: 'Service: sell_outside | Variant: Grande 1.8 | Notes: Full service history' };
+delete vehicleNameSubmission.model;
+const simplifiedSellerRequest = await RequestService.submitSellRequest(vehicleNameSubmission);
+assert.equal(simplifiedSellerRequest.brand, 'Toyota Corolla Altis'); checks++;
+assert.equal(simplifiedSellerRequest.model, ''); checks++;
+assert.doesNotMatch(simplifiedSellerRequest.conditionDescription, /Paint:|Engine:/); checks++;
+await assert.rejects(RequestService.submitSellRequest({ ...vehicleNameSubmission, model: 123 }), (error) => error.statusCode === 400); checks++;
 savedContent.packages.find((item) => item.id === 'sell_outside').enabled = false;
 await assert.rejects(RequestService.submitSellRequest(sell), (error) => error.statusCode === 400); checks++;
 const finder = { ...contact, buyerName: 'Content verification', targetBrand: 'Toyota', targetModel: 'Corolla', minYear: 2022, budgetMax: 6500000, preferredCity: 'Lahore' };

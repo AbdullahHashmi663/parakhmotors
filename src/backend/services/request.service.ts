@@ -11,7 +11,7 @@ export class RequestService {
     const { name: sellerName, phone, email } = contactFields(raw, 'sellerName');
     const city = textField(raw, 'city', { max: 120 });
     const brand = textField(raw, 'brand', { max: 120 });
-    const model = textField(raw, 'model', { max: 160 });
+    const model = textField(raw, 'model', { optional: true, max: 160 });
     const year = numberField(raw, 'year', 1900, new Date().getFullYear() + 1, true);
     const mileage = numberField(raw, 'mileage', 0, 2000000, true);
     const expectedPrice = numberField(raw, 'expectedPrice', 1, 10000000000, true);

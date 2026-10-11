@@ -173,7 +173,7 @@ export const api = {
       email: string;
       city: string;
       brand: string;
-      model: string;
+      model?: string;
       year: number;
       mileage: number;
       expectedPrice: number;

@@ -17,6 +17,19 @@ import type { Vehicle } from '@/types';
 import { formatServicePrice, getActivePackages, resolveContentData, servicePriceLabel } from '@/lib/site-content';
 import styles from './HomeExperience.module.css';
 
+const carBrands = [
+  'Acura', 'Adam', 'Aion', 'Alfa Romeo', 'Alpine', 'Aston Martin', 'Audi', 'BAIC', 'Baojun', 'Bentley', 'BMW', 'Bugatti', 'Buick',
+  'BYD', 'Cadillac', 'Changan', 'Chery', 'Chevrolet', 'Chrysler', 'Citroën', 'Cupra', 'Dacia', 'Daewoo', 'Denza', 'Dewan',
+  'Daihatsu', 'Datsun', 'Dodge', 'Dongfeng', 'DS Automobiles', 'FAW', 'Ferrari', 'Fiat', 'Fisker', 'Ford',
+  'Foton', 'GAC', 'Geely', 'Genesis', 'GMC', 'Great Wall', 'Haval', 'Holden', 'Honda', 'Hongqi', 'Hummer', 'Hyundai',
+  'Infiniti', 'Isuzu', 'JAC', 'Jaecoo', 'Jaguar', 'Jeep', 'Jetour', 'JMC', 'Kia', 'Koenigsegg', 'Lada', 'Leapmotor',
+  'Lamborghini', 'Lancia', 'Land Rover', 'Lexus', 'Li Auto', 'Lincoln', 'Lotus', 'Lucid', 'Lynk & Co', 'Mahindra', 'Maserati', 'Mazda',
+  'McLaren', 'Mercedes-Benz', 'Mercury', 'MG', 'MINI', 'Mitsubishi', 'NIO', 'Nissan', 'Oldsmobile', 'Omoda',
+  'Opel', 'Perodua', 'Peugeot', 'Polestar', 'Pontiac', 'Porsche', 'Prince', 'Proton', 'RAM', 'Regal', 'Renault', 'Rivian',
+  'Rolls-Royce', 'Roewe', 'Saab', 'Sazgar', 'Saturn', 'Scion', 'SEAT', 'Seres', 'Škoda', 'smart', 'SsangYong', 'Subaru', 'Suzuki',
+  'Tata', 'Tesla', 'Toyota', 'United', 'Vauxhall', 'VinFast', 'Volkswagen', 'Volvo', 'Wuling', 'XPeng', 'Zeekr',
+];
+
 export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[] }) {
   const mainId = `${useId()}-main`;
   const contact = useDealershipSettings();
@@ -29,7 +42,8 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
   const [query, setQuery] = useState('');
   const [brand, setBrand] = useState('all');
   const [body, setBody] = useState('all');
-  const [budget, setBudget] = useState('all');
+  const [budgetMin, setBudgetMin] = useState('');
+  const [budgetMax, setBudgetMax] = useState('');
   const [showAll, setShowAll] = useState(false);
   const [shortlist, setShortlist] = useState<string[]>([]);
   const [shortlistOnly, setShortlistOnly] = useState(false);
@@ -66,16 +80,18 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
   const filtered = useMemo(() => vehicles.filter(v => {
     if (v.status === 'sold') return false;
     if (shortlistOnly && !shortlist.includes(v.id)) return false;
-    if (brand !== 'all' && v.brand !== brand) return false;
+    if (brand !== 'all' && v.brand.toLowerCase() !== brand.toLowerCase()) return false;
     if (body !== 'all' && v.bodyType !== body) return false;
-    if (budget === 'under30' && v.price >= 30000000) return false;
-    if (budget === '30to60' && (v.price < 30000000 || v.price > 60000000)) return false;
-    if (budget === 'over60' && v.price <= 60000000) return false;
+    if (budgetMin && v.price < Number(budgetMin)) return false;
+    if (budgetMax && v.price > Number(budgetMax)) return false;
     return `${v.title} ${v.model} ${v.brand} ${v.location}`.toLowerCase().includes(query.toLowerCase().trim());
-  }), [vehicles, brand, body, budget, query, shortlistOnly, shortlist]);
-  const hasFilters = query.trim() || brand !== 'all' || body !== 'all' || budget !== 'all' || shortlistOnly;
+  }), [vehicles, brand, body, budgetMin, budgetMax, query, shortlistOnly, shortlist]);
+  const hasFilters = query.trim() || brand !== 'all' || body !== 'all' || Boolean(budgetMin || budgetMax) || shortlistOnly;
   const visible = showAll || hasFilters ? filtered : filtered.slice(0, 3);
-  const brands = [...new Set(vehicles.filter(v => v.status !== 'sold').map(v => v.brand))].sort();
+  const brands = [...new Set([...carBrands, ...vehicles.filter(v => v.status !== 'sold').map(v => v.brand)])]
+    .map(name => name.trim())
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
   const resultsCount = useRef<HTMLSpanElement>(null);
   const previousCount = useRef<number | null>(null);
   useEffect(() => {
@@ -92,7 +108,7 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
     reducedMotion.addEventListener('change', stopMotion);
     return () => { reducedMotion.removeEventListener('change', stopMotion); scope.revert(); };
   }, [filtered.length]);
-  function resetFilters() { setQuery(''); setBrand('all'); setBody('all'); setBudget('all'); setShortlistOnly(false); }
+  function resetFilters() { setQuery(''); setBrand('all'); setBody('all'); setBudgetMin(''); setBudgetMax(''); setShortlistOnly(false); }
   function scrollToInventory() {
     document.getElementById('inventory-section')?.scrollIntoView({ behavior: 'instant', block: 'start' });
   }
@@ -145,7 +161,7 @@ export function HomeExperience({ initialVehicles }: { initialVehicles: Vehicle[]
           <div className={styles.searchInput}><Search aria-hidden="true" /><label htmlFor="vehicle-search" className="sr-only">Search cars by model or city</label><input id="vehicle-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search your next car..." /></div>
           <div data-motion-feedback="choice" className={styles.selectField}><label htmlFor="brand-filter">Make</label><select id="brand-filter" value={brand} onChange={e => setBrand(e.target.value)}><option value="all">All brands</option>{brands.map(b => <option key={b}>{b}</option>)}</select></div>
           <div data-motion-feedback="choice" className={styles.selectField}><label htmlFor="body-filter">Body type</label><select id="body-filter" value={body} onChange={e => setBody(e.target.value)}><option value="all">All types</option>{['sedan', 'suv', 'crossover', 'hatchback', 'coupe'].map(b => <option key={b} value={b}>{b === 'suv' ? 'SUV' : b[0].toUpperCase() + b.slice(1)}</option>)}</select></div>
-          <div data-motion-feedback="choice" className={styles.selectField}><label htmlFor="budget-filter">Budget</label><select id="budget-filter" value={budget} onChange={e => setBudget(e.target.value)}><option value="all">Any budget</option><option value="under30">Under PKR 3 crore</option><option value="30to60">PKR 3–6 crore</option><option value="over60">Over PKR 6 crore</option></select></div>
+          <div data-motion-feedback="choice" className={styles.rangeField}><label>Budget range (PKR)</label><div className={styles.rangeInputs}><input type="number" min="0" step="100000" aria-label="Minimum price in PKR" placeholder="Min price" value={budgetMin} onChange={e => setBudgetMin(e.target.value)} /><span aria-hidden="true">–</span><input type="number" min={budgetMin || 0} step="100000" aria-label="Maximum price in PKR" placeholder="Max price" value={budgetMax} onChange={e => setBudgetMax(e.target.value)} /></div></div>
           <button data-motion-press type="submit" className={styles.searchButton}><Search aria-hidden="true" /><span>Search cars</span></button>
         </form>
         <div data-motion="reveal" className={styles.resultsToolbar} id="vehicle-results"><span ref={resultsCount} aria-live="polite">{inventoryLoading && !vehicles.length ? 'Loading the collection…' : inventoryError && !vehicles.length ? 'Collection temporarily unavailable' : <>{filtered.length} {filtered.length === 1 ? 'car' : 'cars'} to discover{hasFilters ? ' · matching your search' : ''}</>}</span><div>{hasFilters && <button data-motion-press type="button" onClick={resetFilters}>Clear filters</button>}<button data-motion-press data-motion-feedback="heart" type="button" aria-pressed={shortlistOnly} onClick={() => setShortlistOnly(!shortlistOnly)} className={shortlistOnly ? styles.selectedShortlist : ''}><Heart aria-hidden="true" />Shortlist ({shortlist.length})</button></div></div>

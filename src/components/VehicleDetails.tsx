@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent, type TouchEvent as ReactTouchEvent } from 'react';
 import { gsap } from 'gsap';
 import { VehicleImage } from './VehicleImage';
 import Link from 'next/link';
-import { X, ArrowUpRight, BadgeCheck, Check, CircleCheck, MapPin } from 'lucide-react';
+import { X, ArrowUpRight, ArrowLeft, ArrowRight, BadgeCheck, Check, CircleCheck, MapPin, Maximize2 } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { formatPKR, formatMileage } from '@/lib/utils';
 import type { Vehicle } from '@/types';
@@ -16,7 +16,10 @@ export function VehicleDetails({ vehicle, onClose, returnFocusTo }: { vehicle: V
 
 function VehicleDialog({ vehicle, onClose, returnFocusTo }: { vehicle: Vehicle; onClose: () => void; returnFocusTo?: HTMLElement | null }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const photoViewer = useRef<HTMLDialogElement>(null);
+  const photoViewerTrigger = useRef<HTMLButtonElement | null>(null);
   const gallery = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
   const feedback = useRef<HTMLDivElement>(null);
   const motion = useRef<gsap.Context | null>(null);
   const closing = useRef(false);
@@ -30,6 +33,34 @@ function VehicleDialog({ vehicle, onClose, returnFocusTo }: { vehicle: Vehicle; 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [requestReference, setRequestReference] = useState('');
+  const photos = vehicle.images.length ? vehicle.images : ['/images/parakh-journey.webp'];
+  const movePhoto = useCallback((direction: number) => {
+    setPhoto((current) => (current + direction + photos.length) % photos.length);
+  }, [photos.length]);
+  const openPhotoViewer = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    photoViewerTrigger.current = event.currentTarget;
+    const viewer = photoViewer.current;
+    if (viewer && !viewer.open) {
+      viewer.showModal();
+      viewer.focus();
+    }
+  }, []);
+  const closePhotoViewer = useCallback(() => {
+    if (photoViewer.current?.open) photoViewer.current.close();
+    photoViewerTrigger.current?.focus({ preventScroll: true });
+  }, []);
+  const handlePhotoTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
+    touchStartX.current = event.touches[0]?.clientX ?? null;
+  };
+  const handlePhotoTouchEnd = (event: ReactTouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current === null) return;
+    const endX = event.changedTouches[0]?.clientX;
+    if (endX === undefined) return;
+    const distance = endX - touchStartX.current;
+    touchStartX.current = null;
+    if (distance < -48) movePhoto(1);
+    else if (distance > 48) movePhoto(-1);
+  };
   const restoreOpener = useCallback(() => {
     if (openingPath.current === window.location.pathname && opener.current?.isConnected) {
       opener.current.focus({ preventScroll: true });
@@ -124,11 +155,22 @@ function VehicleDialog({ vehicle, onClose, returnFocusTo }: { vehicle: Vehicle; 
   }
   return <dialog ref={ref} className={styles.dialog} aria-labelledby="vehicle-dialog-title" onCancel={event => { event.preventDefault(); closeDialog(); }} onClick={event => { if (event.target === event.currentTarget) closeDialog(); }}>
     <div className={styles.content}><button type="button" data-motion-press className={styles.close} aria-label="Close vehicle details" onClick={closeDialog}><X aria-hidden="true" /></button>
-      <div ref={gallery} className={styles.gallery}><VehicleImage key={photo} src={vehicle.images[photo] || '/images/parakh-journey.webp'} alt={vehicle.title} fill sizes="(max-width: 760px) 95vw, 700px" /><span><BadgeCheck aria-hidden="true" />{vehicle.condition === 'certified_pre_owned' ? 'Parakh Certified' : 'Inspected'} · {vehicle.inspectionScore}/100</span></div>
-      {vehicle.images.length > 1 && <div className={styles.thumbnails}>{vehicle.images.map((src, index) => <button type="button" data-motion-press key={src} aria-label={`Show vehicle photo ${index + 1}`} aria-pressed={index === photo} onClick={() => setPhoto(index)}><VehicleImage src={src} alt="" width={86} height={56} /></button>)}</div>}
+      <div ref={gallery} className={styles.gallery}><button type="button" className={styles.expandPhoto} onClick={openPhotoViewer} aria-label={`View ${vehicle.title} photo ${photo + 1} full screen`}><VehicleImage key={photo} src={photos[photo]} alt={vehicle.title} fill sizes="(max-width: 760px) 95vw, 700px" /><span className={styles.expandHint}><Maximize2 aria-hidden="true" />View photos</span></button><span><BadgeCheck aria-hidden="true" />{vehicle.condition === 'certified_pre_owned' ? 'Parakh Certified' : 'Inspected'} · {vehicle.inspectionScore}/100</span></div>
+      {photos.length > 1 && <div className={styles.thumbnails}>{photos.map((src, index) => <button type="button" data-motion-press key={`${src}-${index}`} aria-label={`Show vehicle photo ${index + 1}`} aria-pressed={index === photo} onClick={() => setPhoto(index)}><VehicleImage src={src} alt="" width={86} height={56} /></button>)}</div>}
       <div className={styles.details}><div data-dialog-detail className={styles.meta}>{vehicle.year} · {vehicle.brand}<span><MapPin aria-hidden="true" />{vehicle.location}</span></div><h2 data-dialog-detail id="vehicle-dialog-title">{vehicle.title}</h2><div data-dialog-detail className={styles.price}>{formatPKR(vehicle.price)}<span>{vehicle.status === 'reserved' ? 'Reserved — ask about availability' : 'Available for enquiry'}</span></div><div data-dialog-detail className={styles.specs}>{[['Mileage', formatMileage(vehicle.mileage)], ['Transmission', vehicle.transmission], ['Fuel type', vehicle.fuelType], ['Colour', vehicle.color]].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div><p className={styles.description}>{vehicle.description}</p><div className={styles.features}>{vehicle.features.map(feature => <span key={feature}><Check aria-hidden="true" />{feature}</span>)}</div>
       <div ref={feedback} className={styles.formPanel}>{success ? <div className={styles.success} role="status"><CircleCheck aria-hidden="true" /><h3>Your next chapter is one step closer.</h3><p>Your enquiry has been received. Reference: #{requestReference}. Our team will contact you about this car.</p><button type="button" data-motion-press className="btn-secondary" onClick={closeDialog}>Keep exploring</button></div> : <><h3>Let’s talk about this car.</h3><p>Leave your details and our team will help with your next step.</p><form onSubmit={submit}><div className={styles.formGrid}><label>Your name<input name="name" required autoComplete="name" placeholder="Full name" minLength={2} /></label><label>Phone number<input name="phone" required type="tel" minLength={10} maxLength={20} autoComplete="tel" placeholder="03XX XXXXXXX" /></label><label className={styles.full}>Email address<input name="email" required type="email" autoComplete="email" placeholder="you@example.com" /></label><label className={styles.full}>Anything you’d like to know?<textarea name="message" rows={3} placeholder="Ask about a viewing, condition or availability..." /></label></div>{error && <p className={styles.error} role="alert">{error}</p>}<button type="submit" data-motion-press className="btn-primary" disabled={pending}>{pending ? 'Sending your enquiry...' : 'Enquire about this car'}<ArrowUpRight aria-hidden="true" /></button></form></> }</div>
       <Link href="/client/inspection#booking-form" className={styles.inspectionLink}>Prefer an independent inspection? Explore your options <ArrowUpRight aria-hidden="true" /></Link></div>
+      <dialog ref={photoViewer} className={styles.photoViewer} aria-label={`${vehicle.title} photo gallery`} tabIndex={-1} onCancel={(event) => { event.preventDefault(); closePhotoViewer(); }} onKeyDown={(event) => { if (event.key === 'ArrowRight') { event.preventDefault(); movePhoto(1); } else if (event.key === 'ArrowLeft') { event.preventDefault(); movePhoto(-1); } }} onClick={(event) => { if (event.target === event.currentTarget) closePhotoViewer(); }}>
+        <div className={styles.photoViewerLayout}>
+          <header className={styles.photoViewerHeader}><span aria-live="polite">{vehicle.title} · Photo {photo + 1} of {photos.length}</span><button type="button" className={styles.photoViewerClose} onClick={closePhotoViewer} aria-label="Close full-screen photos"><X aria-hidden="true" /></button></header>
+          <div className={styles.photoViewerStage} onTouchStart={handlePhotoTouchStart} onTouchEnd={handlePhotoTouchEnd} onTouchCancel={() => { touchStartX.current = null; }}>
+            {photos.length > 1 && <button type="button" className={`${styles.photoViewerArrow} ${styles.photoViewerPrevious}`} onClick={() => movePhoto(-1)} aria-label="Show previous photo"><ArrowLeft aria-hidden="true" /></button>}
+            <VehicleImage key={`full-${photo}`} src={photos[photo]} alt={`${vehicle.title}, photo ${photo + 1} of ${photos.length}`} fill sizes="100vw" />
+            {photos.length > 1 && <button type="button" className={`${styles.photoViewerArrow} ${styles.photoViewerNext}`} onClick={() => movePhoto(1)} aria-label="Show next photo"><ArrowRight aria-hidden="true" /></button>}
+          </div>
+          {photos.length > 1 && <div className={styles.photoViewerThumbnails} aria-label="Choose a vehicle photo">{photos.map((src, index) => <button type="button" key={`${src}-${index}`} aria-label={`Show photo ${index + 1}`} aria-pressed={index === photo} onClick={() => setPhoto(index)}><VehicleImage src={src} alt="" fill sizes="88px" /></button>)}</div>}
+        </div>
+      </dialog>
     </div>
   </dialog>;
 }

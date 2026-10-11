@@ -7,6 +7,29 @@
 .gallery img { object-fit: cover; }
 .gallery > span { position: absolute; left: 22px; bottom: 18px; background: var(--pm-paper); color: var(--pm-green); display: flex; gap: 7px; align-items: center; padding: 7px 12px; font-size: calc(11px * var(--pm-text-scale)); border-radius: 4px; }
 .gallery svg { width: 15px; height: 15px; }
+.expandPhoto { position: absolute; inset: 0; display: block; width: 100%; height: 100%; padding: 0; overflow: hidden; border: 0; background: transparent; cursor: zoom-in; }
+.expandPhoto img { transition: scale 320ms ease; }
+.expandPhoto:focus-visible { outline: 3px solid var(--pm-green); outline-offset: -4px; }
+.expandHint { position: absolute; right: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid rgb(255 255 255 / 24%); border-radius: 4px; background: rgb(0 0 0 / 70%); color: #fff; font-size: calc(10px * var(--pm-text-scale)); }
+.expandHint svg { width: 14px; height: 14px; }
+.photoViewer { position: fixed; inset: 0; width: 100%; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; overflow: hidden; border: 0; background: #050505; color: #fff; }
+.photoViewer::backdrop { background: #050505; }
+.photoViewer:focus { outline: none; }
+.photoViewerLayout { display: grid; width: 100%; height: 100%; grid-template-rows: auto minmax(0,1fr) auto; padding: max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+.photoViewerHeader { display: flex; min-height: 54px; align-items: center; justify-content: space-between; gap: 16px; color: rgb(255 255 255 / 78%); font-size: calc(12px * var(--pm-text-scale)); }
+.photoViewerClose, .photoViewerArrow { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 1px solid rgb(255 255 255 / 24%); border-radius: 50%; background: rgb(255 255 255 / 8%); color: #fff; cursor: pointer; transition: background-color 160ms ease, scale 160ms ease; }
+.photoViewerClose:hover, .photoViewerArrow:hover { background: rgb(255 255 255 / 18%); }
+.photoViewerClose:focus-visible, .photoViewerArrow:focus-visible, .photoViewerThumbnails button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.photoViewerClose svg, .photoViewerArrow svg { width: 21px; height: 21px; }
+.photoViewerStage { position: relative; min-height: 0; display: grid; place-items: center; overflow: hidden; touch-action: pan-y; overscroll-behavior: contain; }
+.photoViewerStage img { object-fit: contain; user-select: none; -webkit-user-drag: none; }
+.photoViewerArrow { position: absolute; z-index: 1; top: 50%; translate: 0 -50%; background: rgb(0 0 0 / 55%); }
+.photoViewerPrevious { left: 12px; }
+.photoViewerNext { right: 12px; }
+.photoViewerThumbnails { display: flex; justify-content: center; gap: 9px; max-width: 100%; overflow-x: auto; padding: 14px 0 max(4px,env(safe-area-inset-bottom)); }
+.photoViewerThumbnails button { position: relative; width: 76px; height: 52px; flex: 0 0 auto; overflow: hidden; padding: 0; border: 1px solid rgb(255 255 255 / 24%); border-radius: 4px; background: #151515; cursor: pointer; opacity: .68; }
+.photoViewerThumbnails button[aria-pressed=true] { border: 2px solid #fff; opacity: 1; }
+.photoViewerThumbnails img { object-fit: cover; }
 .thumbnails { padding: 15px 30px 0; display: flex; gap: 12px; }
 .thumbnails button { padding: 3px; border: 1px solid transparent; background: transparent; border-radius: 4px; transition: border-color 180ms, background 180ms; }
 .thumbnails button[aria-pressed=true] { border-color: var(--pm-green); }
@@ -40,4 +63,5 @@
 .success p { margin-block: 14px 20px; font-size: calc(13px * var(--pm-text-scale)); color: var(--pm-muted); }
 .inspectionLink { display: inline-flex; align-items: center; gap: 8px; font-size: calc(11px * var(--pm-text-scale)); color: var(--pm-green); margin-top: 20px; min-height: 44px; }
 .inspectionLink svg { width: 15px; height: 15px; }
-@media (max-width: 600px) { .gallery { height: 240px; } .details { padding: 22px; } .details h2 { font-size: calc(25px * var(--pm-text-scale)); } .specs { grid-template-columns: 1fr 1fr; } .meta { flex-wrap: wrap; } .features { grid-template-columns: 1fr; } .formPanel { padding: 18px; } .formGrid { grid-template-columns: 1fr; } .formPanel h3 { font-size: calc(21px * var(--pm-text-scale)); } .formPanel form > button { width: 100%; } }
+@media (max-width: 600px) { .gallery { height: 240px; } .details { padding: 22px; } .details h2 { font-size: calc(25px * var(--pm-text-scale)); } .specs { grid-template-columns: 1fr 1fr; } .meta { flex-wrap: wrap; } .features { grid-template-columns: 1fr; } .formPanel { padding: 18px; } .formGrid { grid-template-columns: 1fr; } .formPanel h3 { font-size: calc(21px * var(--pm-text-scale)); } .formPanel form > button { width: 100%; } .photoViewerLayout { padding-inline: max(10px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-right)); } .photoViewerHeader { min-height: 48px; font-size: calc(11px * var(--pm-text-scale)); } .photoViewerClose, .photoViewerArrow { width: 44px; height: 44px; } .photoViewerPrevious { left: 2px; } .photoViewerNext { right: 2px; } .photoViewerThumbnails { justify-content: flex-start; } }
+@media (prefers-reduced-motion: reduce) { .expandPhoto img, .photoViewerClose, .photoViewerArrow { transition: none; } }

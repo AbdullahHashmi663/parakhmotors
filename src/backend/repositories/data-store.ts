@@ -11,7 +11,7 @@ type Fields = Record<string, string>;
 type Executor = Pick<PoolClient, 'query'>;
 type Row = Record<string, unknown>;
 const vehicleFields: Fields = {
-  id: 'id', title: 'title', brand: 'brand', model: 'model', year: 'year', price: 'price', mileage: 'mileage',
+  id: 'id', title: 'title', brand: 'brand', model: 'model', year: 'year', price: 'price', discountPrice: 'discount_price', mileage: 'mileage',
   fuelType: 'fuel_type', transmission: 'transmission', bodyType: 'body_type', condition: 'condition',
   inspectionScore: 'inspection_score', color: 'color', location: 'location', status: 'status', featured: 'featured',
   images: 'images', features: 'features', description: 'description', createdAt: 'created_at', updatedAt: 'updated_at',
@@ -44,7 +44,7 @@ const settingsFields: Fields = {
   workingHours: 'working_hours', announcement: 'announcement', currency: 'currency', heroHeadline: 'hero_headline',
   heroSubheadline: 'hero_subheadline', activeThemeId: 'active_theme_id', websiteContent: 'website_content',
 };
-const numberFields = new Set(['year', 'price', 'mileage', 'inspectionScore', 'carYear', 'estimatedFee', 'expectedPrice',
+const numberFields = new Set(['year', 'price', 'discountPrice', 'mileage', 'inspectionScore', 'carYear', 'estimatedFee', 'expectedPrice',
   'estimatedMarketValueMin', 'estimatedMarketValueMax', 'minYear', 'budgetMax']);
 function mapRow<T>(row: Row, fields: Fields): T {
   const mapped: Row = {};

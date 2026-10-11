@@ -15,6 +15,14 @@ function vehicleFields(raw: Record<string, unknown>, partial: boolean): Partial<
   }
   if (!partial || 'year' in raw) data.year = numberField(raw, 'year', 1900, new Date().getFullYear() + 1, true);
   if (!partial || 'price' in raw) data.price = numberField(raw, 'price', 1, 10000000000, true);
+  if (!partial || 'discountPrice' in raw) {
+    data.discountPrice = raw.discountPrice === undefined || raw.discountPrice === null || raw.discountPrice === ''
+      ? null
+      : numberField(raw, 'discountPrice', 1, 10000000000, true);
+  }
+  if (data.discountPrice != null && data.price !== undefined && data.discountPrice >= data.price) {
+    throw ApiError.badRequest('Discounted price must be lower than the regular price');
+  }
   if (!partial || 'mileage' in raw) data.mileage = numberField({ mileage: raw.mileage ?? 0 }, 'mileage', 0, 2000000, true);
   if (!partial || 'inspectionScore' in raw) data.inspectionScore = numberField({ inspectionScore: raw.inspectionScore ?? 0 }, 'inspectionScore', 0, 100, true);
   if (!partial || 'fuelType' in raw) data.fuelType = enumField(raw.fuelType ?? 'petrol', fuelTypes, 'fuel type');
@@ -61,16 +69,16 @@ export class VehicleService {
       list = list.filter(v => [v.title, v.brand, v.model, v.description].some(value => value.toLowerCase().includes(q)));
     }
     if (params.brand) list = list.filter(v => v.brand.toLowerCase() === params.brand!.toLowerCase());
-    if (params.minPrice !== undefined) list = list.filter(v => v.price >= params.minPrice!);
-    if (params.maxPrice !== undefined) list = list.filter(v => v.price <= params.maxPrice!);
+    if (params.minPrice !== undefined) list = list.filter(v => (v.discountPrice ?? v.price) >= params.minPrice!);
+    if (params.maxPrice !== undefined) list = list.filter(v => (v.discountPrice ?? v.price) <= params.maxPrice!);
     if (params.minYear !== undefined) list = list.filter(v => v.year >= params.minYear!);
     if (params.maxYear !== undefined) list = list.filter(v => v.year <= params.maxYear!);
     if (params.bodyType) list = list.filter(v => v.bodyType === params.bodyType);
     if (params.fuelType) list = list.filter(v => v.fuelType === params.fuelType);
     if (params.condition) list = list.filter(v => v.condition === params.condition);
     switch (params.sort) {
-      case 'price_asc': list.sort((a, b) => a.price - b.price); break;
-      case 'price_desc': list.sort((a, b) => b.price - a.price); break;
+      case 'price_asc': list.sort((a, b) => (a.discountPrice ?? a.price) - (b.discountPrice ?? b.price)); break;
+      case 'price_desc': list.sort((a, b) => (b.discountPrice ?? b.price) - (a.discountPrice ?? a.price)); break;
       case 'year_desc': list.sort((a, b) => b.year - a.year); break;
       case 'mileage_asc': list.sort((a, b) => a.mileage - b.mileage); break;
       default: list.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
@@ -96,6 +104,15 @@ export class VehicleService {
   static async updateVehicle(id: string, raw: Record<string, unknown>, photos: ProcessedSellPhoto[] = []) {
     const validId = resourceId(id);
     const fields = vehicleFields(raw, true);
+    if (fields.discountPrice != null || fields.price !== undefined) {
+      const current = await dataStore.getVehicleById(validId);
+      if (!current) throw ApiError.notFound('Vehicle not found');
+      const regularPrice = fields.price ?? current.price;
+      const discountedPrice = fields.discountPrice === undefined ? current.discountPrice : fields.discountPrice;
+      if (discountedPrice != null && discountedPrice >= regularPrice) {
+        throw ApiError.badRequest('Discounted price must be lower than the regular price');
+      }
+    }
     if ((fields.images?.length ?? 0) + photos.length > 20) throw ApiError.badRequest('Use no more than 20 image links and uploaded photos together');
     const updated = photos.length || 'images' in fields
       ? await dataStore.updateVehicleWithPhotos(validId, fields, photos)

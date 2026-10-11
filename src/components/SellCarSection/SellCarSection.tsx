@@ -188,10 +188,10 @@ export const SellCarSection: React.FC = () => {
 
               <div className={styles.grid2}>
                 <div className={styles.field}>
-                  <label className={styles.label}>Email Address</label>
+                  <label className={styles.label}>Email Address (optional)</label>
                   <input
                     type="email"
-                    required
+                    autoComplete="email"
                     value={email}
                     placeholder="seller@example.com"
                     onChange={(e) => setEmail(e.target.value)}

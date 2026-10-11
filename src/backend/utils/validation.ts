@@ -36,7 +36,7 @@ export async function readJsonObject(request: Request, maxBytes = 64 * 1024): Pr
 
 export function textField(body: Record<string, unknown>, key: string, options: { optional?: boolean; max?: number; min?: number } = {}): string {
   const value = body[key];
-  if (options.optional && (value === undefined || value === null || value === '')) return '';
+  if (options.optional && (value === undefined || value === null || (typeof value === 'string' && value.trim() === ''))) return '';
   if (typeof value !== 'string') throw ApiError.badRequest(`${key} must be text`);
   const clean = value.trim();
   if (clean.length < (options.min ?? 1) || clean.length > (options.max ?? 200)) {
@@ -62,9 +62,9 @@ export function enumField<T extends string>(value: unknown, allowed: readonly T[
 
 export function contactFields(body: Record<string, unknown>, nameKey: string) {
   const name = textField(body, nameKey, { max: 120 });
-  const email = textField(body, 'email', { max: 254 }).toLowerCase();
+  const email = textField(body, 'email', { optional: true, max: 254 }).toLowerCase();
   const phone = textField(body, 'phone', { max: 30 });
-  if (!isValidEmail(email)) throw ApiError.badRequest('Invalid email address');
+  if (email && !isValidEmail(email)) throw ApiError.badRequest('Invalid email address');
   if (!isValidPhone(phone)) throw ApiError.badRequest('Invalid phone number');
   return { name, email, phone };
 }

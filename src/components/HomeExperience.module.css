@@ -140,6 +140,9 @@
 .vehicleSpecs svg { width: 12px; height: 12px; stroke-width: 1.5; }
 .vehicleBottom { border-top: 1px solid var(--pm-line); padding-top: 17px; display: flex; justify-content: space-between; align-items: center; }
 .vehicleBottom strong { font-size: calc(19px * var(--pm-text-scale)); font-weight: 550; letter-spacing: -.4px; }
+.vehiclePriceGroup { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.vehiclePriceGroup del { color: var(--pm-muted); font-size: calc(10px * var(--pm-text-scale)); }
+.discountTag { position: absolute; top: 55px; left: 15px; z-index: 1; border-radius: 3px; padding: 5px 8px; background: var(--pm-lime); color: var(--pm-accent-text); font-size: calc(8px * var(--pm-text-scale)); font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
 .vehicleBottom button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--pm-line); background: var(--pm-tint); display: grid; place-items: center; color: var(--pm-green); transition: background 200ms; }
 .vehicleBottom button:hover { background: var(--pm-lime); color: var(--pm-accent-text); }
 .vehicleBottom svg { width: 18px; height: 18px; }

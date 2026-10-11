@@ -146,10 +146,10 @@ export const InspectionModal: React.FC<InspectionModalProps> = ({
 
             <div className={styles.grid}>
               <div className={styles.field}>
-                <label className={styles.label}>Email Address *</label>
+                <label className={styles.label}>Email Address (optional)</label>
                 <input
                   type="email"
-                  required
+                  autoComplete="email"
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

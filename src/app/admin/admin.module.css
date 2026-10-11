@@ -89,6 +89,9 @@
 .vehicleBody h3 { font-size: calc(17px * var(--pm-text-scale)); font-weight: 500; line-height: 1.4; min-height: 48px; letter-spacing: -.4px; }
 .vehicleSpecs { display: flex; gap: 11px; font-size: calc(9px * var(--pm-text-scale)); color: var(--pm-muted); margin-block: 12px; text-transform: capitalize; flex-wrap: wrap; }
 .vehiclePrice { font-size: calc(21px * var(--pm-text-scale)); font-weight: 500; color: var(--pm-green); margin-bottom: 15px; }
+.vehiclePriceGroup { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-bottom: 15px; }
+.vehiclePriceGroup .vehiclePrice { margin-bottom: 0; }
+.vehiclePriceGroup del { color: var(--pm-muted); font-size: calc(10px * var(--pm-text-scale)); }
 .vehicleActions { display: flex; gap: 9px; border-top: 1px solid var(--pm-line); padding-top: 14px; align-items: center; }
 .iconButton { width: 44px; height: 44px; border: 1px solid var(--pm-line); background: var(--pm-surface); color: var(--pm-green); border-radius: 4px; display: inline-grid; place-items: center; }
 .iconButton:hover { background: var(--pm-tint); }

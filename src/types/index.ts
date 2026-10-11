@@ -13,6 +13,7 @@ export interface Vehicle {
   model: string;
   year: number;
   price: number; // in PKR
+  discountPrice?: number | null; // promotional price in PKR
   mileage: number; // in km
   fuelType: FuelType;
   transmission: TransmissionType;

@@ -21,7 +21,7 @@ async function request(path, method = 'GET', body, options = {}) {
 }
 async function expectStatus(path, status, method = 'GET', body, options) {
   const result = await request(path, method, body, options);
-  assert.equal(result.response.status, status, `${method} ${path}: expected ${status}, received ${result.response.status}`);
+  assert.equal(result.response.status, status, `${method} ${path}: expected ${status}, received ${result.response.status}: ${JSON.stringify(result.data)}`);
   tests += 1;
   return result;
 }
@@ -75,27 +75,35 @@ try {
   const expired = expiredPayload + '.' + createHmac('sha256', key).update(expiredPayload).digest('base64url');
   await expectStatus('/api/admin/data', 401, 'GET', undefined, { headers: { Cookie: 'pm_admin_session=' + expired } });
 
-  const vehicleBody = { title: marker, brand: 'Toyota', model: 'Corolla', year: 2022, price: 5000000, mileage: 25000, fuelType: 'petrol', transmission: 'automatic', bodyType: 'sedan', condition: 'used', inspectionScore: 95, color: 'White', location: 'Lahore', status: 'available', featured: false, images: ['/images/hero-drive.webp'], features: ['Test feature'], description: 'Temporary integration verification listing' };
+  const vehicleBody = { title: marker, brand: 'Toyota', model: 'Corolla', year: 2022, price: 5000000, discountPrice: 4500000, mileage: 25000, fuelType: 'petrol', transmission: 'automatic', bodyType: 'sedan', condition: 'used', inspectionScore: 95, color: 'White', location: 'Lahore', status: 'available', featured: false, images: ['/images/hero-drive.webp'], features: ['Test feature'], description: 'Temporary integration verification listing' };
   await expectStatus('/api/vehicles', 400, 'POST', { ...vehicleBody, price: 5000000.5 }, { admin: true });
+  await expectStatus('/api/vehicles', 400, 'POST', { ...vehicleBody, discountPrice: 5000000 }, { admin: true });
   await expectStatus('/api/vehicles', 400, 'POST', { ...vehicleBody, inspectionScore: 95.5 }, { admin: true });
   const vehicle = await create('/api/vehicles', 'vehicles', vehicleBody);
+  assert.equal(vehicle.discountPrice, vehicleBody.discountPrice);
   await expectStatus('/api/vehicles/' + vehicle.id, 200);
   const updatedVehicle = await expectStatus('/api/vehicles/' + vehicle.id, 200, 'PUT', { price: 5100000, status: 'reserved', id: 'must-not-change' }, { admin: true });
   assert.equal(updatedVehicle.data.data.id, vehicle.id);
   assert.equal(updatedVehicle.data.data.price, 5100000);
+  assert.equal(updatedVehicle.data.data.discountPrice, vehicleBody.discountPrice);
   const results = await expectStatus('/api/vehicles?search=' + encodeURIComponent(marker) + '&limit=1', 200);
   assert.equal(results.data.data[0].id, vehicle.id);
+  const discountedBudget = await expectStatus('/api/vehicles?search=' + encodeURIComponent(marker) + '&minPrice=4500000&maxPrice=4500000', 200);
+  assert.equal(discountedBudget.data.data[0].id, vehicle.id);
   const page = await expectStatus('/api/vehicles?limit=2&page=2', 200);
   assert.equal(page.data.meta.page, 2);
   assert.equal(page.data.data.length, 2);
   await expectStatus('/api/vehicles?limit=-1', 400);
 
-  const contact = { name: marker, phone: '03001234567', email: 'integration@example.invalid' };
+  const contact = { name: marker, phone: '03001234567' };
   const futureDate = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+  const feeSettings = await expectStatus('/api/admin/settings', 200);
+  const basicPackage = feeSettings.data.data.websiteContent.packages.find((item) => item.id === 'basic');
+  assert.ok(basicPackage, 'The basic inspection package must be available in the published website settings');
   const inspectionBody = { customerName: contact.name, email: contact.email, phone: contact.phone, city: 'Lahore', carMake: 'Toyota', carModel: 'Corolla', carYear: 2022, packageType: 'basic', preferredDate: futureDate, preferredTimeSlot: 'morning', locationAddress: 'Integration test address', notes: marker };
   await expectStatus('/api/inspections', 400, 'POST', { ...inspectionBody, preferredDate: '2020-01-01' });
   const inspection = await create('/api/inspections', 'inspections', inspectionBody);
-  assert.equal(inspection.estimatedFee, 7000);
+  assert.equal(inspection.estimatedFee, basicPackage.price);
   await expectStatus('/api/inspections/' + inspection.id, 401);
   await expectStatus('/api/inspections/' + inspection.id, 200, 'PATCH', { status: 'confirmed' }, { admin: true });
   await expectStatus('/api/inspections/' + inspection.id, 400, 'PATCH', { status: 'invalid' }, { admin: true });

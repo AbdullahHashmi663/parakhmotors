@@ -11,6 +11,8 @@
     "db:setup": "node scripts/setup-database.mjs",
     "db:migrate:content": "node scripts/migrate-website-content.mjs",
     "db:migrate:photos": "node scripts/migrate-sell-photos.mjs",
+    "db:migrate:optional-email": "node scripts/migrate-optional-customer-email.mjs",
+    "db:migrate:vehicle-discounts": "node scripts/migrate-vehicle-discounts.mjs",
     "test:content": "node scripts/verify-website-content.mjs",
     "test:sell-photos": "node scripts/verify-sell-photos.mjs",
     "test:integration": "node scripts/verify-integration.mjs"

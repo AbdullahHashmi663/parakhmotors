@@ -78,6 +78,7 @@ export function validateSiteContent(value: unknown): SiteContent {
   for (const item of content.packages) {
     const expected = defaultSiteContent.packages.find((entry) => entry.id === item.id);
     if (!expected || expected.kind !== item.kind) throw ApiError.badRequest(`Invalid service kind for package ${item.id}`);
+    if (item.discountPrice !== 0 && item.discountPrice >= item.price) throw ApiError.badRequest(`The discount price for ${item.title} must be lower than its regular price`);
   }
   for (const offering of content.services) {
     if (new Set(offering.packageIds).size !== offering.packageIds.length || offering.packageIds.some((id) => !packageIds.includes(id))) throw ApiError.badRequest(`Invalid package selection for ${offering.title || offering.id}`);

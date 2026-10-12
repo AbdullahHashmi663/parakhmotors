@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { ArrowRight, Check, ChevronDown, CircleCheck, ClipboardCheck, FileText, Handshake, PhoneCall, ShieldCheck, Video } from 'lucide-react';
 import { CustomerPage, CustomerContentHero, CustomerHeadline, CustomerSectionTitle, CustomerChecklist, CustomerSteps, CustomerFAQ, CustomerContentCTA, CustomerFormAside, useCustomerPageContent, customerStyles as s } from '@/components/CustomerPages';
 import { CustomerRequestForm } from '@/components/CustomerRequestForm';
-import { formatServicePrice, getActivePackages, resolveContentText } from '@/lib/site-content';
+import { getActivePackages, resolveContentText } from '@/lib/site-content';
+import { ServicePrice } from '@/components/ServicePrice';
 
 const formatIcons = [FileText, Video, PhoneCall];
 
@@ -20,7 +21,7 @@ export default function InspectionPage() {
   return <CustomerPage><CustomerContentHero page={page} href="#booking-form" secondary={{ href: '#packages', label: 'Compare packages' }} />
     <section className={s.section} id="packages"><div className="container-custom"><CustomerSectionTitle eyebrow={page.eyebrow} title={page.sectionTitle} description={page.sectionDescription} /><div data-motion="stagger" className={s.gridTwo}>{packages.map(pkg => {
       const Icon = pkg.id === 'deal_package' ? Handshake : ClipboardCheck;
-      return <div data-motion-item data-motion-hover="lift" className={s.card} key={pkg.id}><div className={s.icon}><Icon size={25} strokeWidth={1.5} aria-hidden="true" /></div><h3>{text(pkg.title)}</h3><div className={s.price}>{formatServicePrice(pkg.price)}{pkg.unit && <small> / {pkg.unit}</small>}</div><p>{text(pkg.description)}</p><CustomerChecklist items={pkg.features.map(text)} />{pkg.paymentNote && <p>{text(pkg.paymentNote)}</p>}<button data-motion-press type="button" className={s.submit} onClick={() => choosePackage(pkg.id)}>Choose {text(pkg.title)}<ArrowRight size={16} aria-hidden="true" /></button></div>;
+      return <div data-motion-item data-motion-hover="lift" className={s.card} key={pkg.id}><div className={s.icon}><Icon size={25} strokeWidth={1.5} aria-hidden="true" /></div><h3>{text(pkg.title)}</h3><ServicePrice item={pkg} /><p>{text(pkg.description)}</p><CustomerChecklist items={pkg.features.map(text)} />{pkg.paymentNote && <p>{text(pkg.paymentNote)}</p>}<button data-motion-press type="button" className={s.submit} onClick={() => choosePackage(pkg.id)}>Choose {text(pkg.title)}<ArrowRight size={16} aria-hidden="true" /></button></div>;
     })}</div></div></section>
     <CustomerSteps title={page.stepsTitle} steps={page.steps} />
     {details && report && <section className={`${s.section} ${s.green}`}><div className="container-custom"><div className={s.blueprintSection}>

@@ -2,7 +2,7 @@ import { dataStore } from '../repositories/data-store';
 import { ApiError } from '../utils/api-error';
 import { contactFields, enumField, inspectionStatuses, numberField, resourceId, textField } from '../utils/validation';
 import type { InspectionBooking } from '@/types';
-import { getServicePackage } from '@/lib/site-content';
+import { getServicePackage, servicePackagePrice } from '@/lib/site-content';
 
 export class InspectionService {
   static async getAllInspections(status?: InspectionBooking['status']) {
@@ -35,7 +35,7 @@ export class InspectionService {
     const preferredTimeSlot = textField(raw, 'preferredTimeSlot', { optional: true, max: 80 });
     const locationAddress = textField(raw, 'locationAddress', { optional: true, max: 500 });
     const notes = textField(raw, 'notes', { optional: true, max: 5000 });
-    return await dataStore.createInspection({ customerName, email, phone, city, carMake, carModel, carYear, packageType, preferredDate, preferredTimeSlot: preferredTimeSlot || undefined, locationAddress: locationAddress || undefined, estimatedFee: selectedPackage.price, notes: notes || undefined, status: 'pending' });
+    return await dataStore.createInspection({ customerName, email, phone, city, carMake, carModel, carYear, packageType, preferredDate, preferredTimeSlot: preferredTimeSlot || undefined, locationAddress: locationAddress || undefined, estimatedFee: servicePackagePrice(selectedPackage), notes: notes || undefined, status: 'pending' });
   }
 
   static async updateStatus(id: string, status: unknown, notes?: string) {

@@ -49,6 +49,7 @@
 .serviceImage img { object-fit: cover; transition: scale 600ms var(--pm-ease); }
 .serviceCard:focus-visible .serviceImage img { scale: 1.035; }
 .serviceImage > span { position: absolute; bottom: 15px; left: 20px; background: var(--pm-paper); padding: 5px 9px; font-size: calc(7px * var(--pm-text-scale)); font-weight: 550; letter-spacing: .8px; border-radius: 2px; }
+.serviceImage .serviceDiscountBadge { position: absolute; top: 13px; left: 14px; z-index: 1; width: fit-content; border: 1px solid color-mix(in srgb, var(--pm-accent-text) 20%, transparent); border-radius: 3px 3px 3px 0; padding: 7px 10px 8px; background: var(--pm-lime); color: var(--pm-accent-text); box-shadow: 0 5px 18px color-mix(in srgb, var(--pm-ink) 24%, transparent); font-size: calc(8px * var(--pm-text-scale)); font-weight: 850; letter-spacing: .65px; }
 .serviceContent { padding: 25px 25px 22px; }
 .serviceMeta { display: flex; align-items: center; gap: 9px; color: var(--pm-green); font-size: calc(10px * var(--pm-text-scale)); }
 .serviceMeta svg { height: 18px; width: 18px; stroke-width: 1.5; }

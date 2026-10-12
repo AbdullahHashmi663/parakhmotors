@@ -71,7 +71,7 @@
 .choice:focus-within { border-color: var(--pm-green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pm-focus), transparent 85%); }
 .choice input { accent-color: var(--pm-green); margin-top: 3px; }
 .choice strong { font-size: calc(12px * var(--pm-text-scale)); display: block; font-weight: 500; line-height: 1.5; }
-.choice span { display: block; font-size: calc(12px * var(--pm-text-scale)); color: var(--pm-green); margin-top: 5px; }
+.choice > div > span { display: block; font-size: calc(12px * var(--pm-text-scale)); color: var(--pm-green); margin-top: 5px; }
 .selected, .choice:has(input:checked) { background: var(--pm-tint); border-color: var(--pm-green); }
 .submit { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; font-family: inherit; min-height: 50px; border: 0; border-radius: 3px; background: var(--pm-button-bg); color: var(--pm-button-text); font-size: calc(13px * var(--pm-text-scale)); font-weight: 500; cursor: pointer; transition: background .2s, color .2s; }
 .submit:hover { background: var(--pm-hover); color: var(--pm-hover-text); }

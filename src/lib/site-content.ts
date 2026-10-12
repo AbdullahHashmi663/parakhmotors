@@ -9,7 +9,7 @@ export interface ContentStep { title: string; description: string }
 export interface ContentFAQ { question: string; answer: string }
 export interface ContentBlock { eyebrow: string; title: string; description: string; items: string[]; rows: ContentStep[] }
 export interface ServicePackage {
-  id: ServicePackageId; kind: PackageKind; title: string; price: number; description: string;
+  id: ServicePackageId; kind: PackageKind; title: string; price: number; discountPrice: number; description: string;
   features: string[]; unit: string; paymentNote: string; enabled: boolean;
 }
 export interface ServiceOffering {
@@ -48,7 +48,7 @@ function page(eyebrow: string, headline: string, description: string, additions:
   return { eyebrow, headline, description, image, imageAlt: 'A car overlooking the mountains of Pakistan', imageLabel: 'Good cars. Clear decisions.', primaryLabel: 'Talk to our team', sectionTitle: 'Good service starts with clarity.', sectionDescription: '', formTitle: 'Your next move starts here.', formDescription: 'Share your details. Our team will get in touch to confirm the next step.', stepsTitle: 'A clear way forward.', steps: [step('Tell us what you need', 'Share your plans, car details and questions.'), step('Agree the details', 'Our team confirms the scope, service fee and arrangements.'), step('Move forward with support', 'We help you understand your options and the next step.')], faq: [], ctaTitle: 'Your next move starts here.', ctaDescription: 'A car question, a buying decision, or a car to sell. Let’s talk it through.', ctaLabel: 'Talk to our team', extras: {}, ...additions };
 }
 function pkg(id: ServicePackageId, kind: PackageKind, title: string, price: number, description: string, features: string[], additions: Partial<ServicePackage> = {}): ServicePackage {
-  return { id, kind, title, price, description, features, unit: kind === 'inspection' ? 'inspection' : kind === 'sourcing' ? 'sourcing fee' : 'service', paymentNote: '', enabled: true, ...additions };
+  return { id, kind, title, price, discountPrice: 0, description, features, unit: kind === 'inspection' ? 'inspection' : kind === 'sourcing' ? 'sourcing fee' : 'service', paymentNote: '', enabled: true, ...additions };
 }
 export const defaultSiteContent: SiteContent = {
   contact: { whatsappMessage: 'Hello Parakh Motors, I would like to inquire about your services and vehicles.', mapsUrl: '', facebookUrl: '', instagramUrl: '', youtubeUrl: '', serviceAreas: 'Lahore, Punjab · Vehicle sourcing across Pakistan' },
@@ -123,13 +123,19 @@ export function normalizeSiteContent(value: unknown): SiteContent {
     }
     return typeof saved === typeof defaults ? saved : defaults;
   };
-  return merge(defaultSiteContent, value) as SiteContent;
+  const normalized = merge(defaultSiteContent, value) as SiteContent;
+  const defaultPackages = new Map(defaultSiteContent.packages.map(item => [item.id, item]));
+  normalized.packages = normalized.packages.map(item => ({ ...defaultPackages.get(item.id), ...item, discountPrice: Number.isFinite(item.discountPrice) ? item.discountPrice : 0 }));
+  return normalized;
 }
 export const formatServicePrice = (price: number) => `Rs. ${price.toLocaleString('en-PK')}`;
 export const getServicePackage = (content: SiteContent, id: string) => content.packages.find(item => item.id === id);
 export const getActivePackages = (content: SiteContent, kind: PackageKind) => content.packages.filter(item => item.kind === kind && item.enabled);
+export const servicePackagePrice = (item: Pick<ServicePackage, 'price' | 'discountPrice'>) => item.discountPrice > 0 && item.discountPrice < item.price ? item.discountPrice : item.price;
+export const servicePackageDiscountPercent = (item: Pick<ServicePackage, 'price' | 'discountPrice'>) => item.price > 0 && servicePackagePrice(item) < item.price ? Math.round((item.price - servicePackagePrice(item)) / item.price * 100) : 0;
+export const serviceOfferingDiscountPercent = (content: SiteContent, offering: ServiceOffering) => Math.max(0, ...content.packages.filter(item => offering.packageIds.includes(item.id) && item.enabled).map(servicePackageDiscountPercent));
 export function servicePriceLabel(content: SiteContent, offering: ServiceOffering): string {
-  const prices = content.packages.filter(item => offering.packageIds.includes(item.id) && item.enabled).map(item => item.price);
+  const prices = content.packages.filter(item => offering.packageIds.includes(item.id) && item.enabled).map(servicePackagePrice);
   if (!prices.length || prices.every(price => price === 0)) return 'Discuss with our team';
   const low = Math.min(...prices), high = Math.max(...prices);
   return low === high ? formatServicePrice(low) : `${formatServicePrice(low)}–${high.toLocaleString('en-PK')}`;
@@ -141,7 +147,7 @@ export function resolveContentText(text: string, settings: DealershipSettings): 
     const [kind, id] = token.split(':');
     if (kind === 'fee' || kind === 'payment') {
       const item = getServicePackage(content, id);
-      return item ? item.enabled ? kind === 'fee' ? formatServicePrice(item.price) : item.paymentNote : 'currently unavailable' : match;
+      return item ? item.enabled ? kind === 'fee' ? formatServicePrice(servicePackagePrice(item)) : item.paymentNote : 'currently unavailable' : match;
     }
     return values[token] ?? match;
   });

@@ -143,8 +143,12 @@
 .vehicleBottom strong { font-size: calc(19px * var(--pm-text-scale)); font-weight: 550; letter-spacing: -.4px; }
 .vehiclePriceGroup { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
 .vehiclePriceGroup del { color: var(--pm-muted); font-size: calc(10px * var(--pm-text-scale)); }
-.discountTag { position: absolute; top: 55px; left: 15px; z-index: 1; display: inline-flex; align-items: center; gap: 5px; min-height: 30px; border: 1px solid color-mix(in srgb, var(--pm-accent-text) 14%, transparent); border-radius: 3px; padding: 6px 10px; background: var(--pm-lime); color: var(--pm-accent-text); box-shadow: 0 3px 12px color-mix(in srgb, var(--pm-ink) 18%, transparent); font-size: calc(10px * var(--pm-text-scale)); font-weight: 750; letter-spacing: .55px; text-transform: uppercase; pointer-events: none; }
-.discountTag svg { width: 14px; height: 14px; stroke-width: 2; }
+.discountTag { position: absolute; top: 55px; left: 15px; z-index: 1; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; border: 1px solid color-mix(in srgb, var(--pm-accent-text) 20%, transparent); border-radius: 3px 3px 3px 0; padding: 7px 12px 8px 9px; background: var(--pm-lime); color: var(--pm-accent-text); box-shadow: 0 5px 18px color-mix(in srgb, var(--pm-ink) 26%, transparent); pointer-events: none; }
+.discountTag::after { content: ''; position: absolute; left: 0; bottom: -7px; width: 8px; height: 7px; background: var(--pm-lime); clip-path: polygon(0 0, 100% 0, 0 100%); }
+.discountTag > svg { width: 20px; height: 20px; stroke-width: 2; flex: 0 0 auto; }
+.discountCopy { display: flex; flex-direction: column; gap: 2px; }
+.discountCopy strong { font-size: calc(8px * var(--pm-text-scale)); font-weight: 800; letter-spacing: .8px; line-height: 1.1; }
+.discountCopy em { font-size: calc(12px * var(--pm-text-scale)); font-style: normal; font-weight: 800; letter-spacing: .25px; line-height: 1.1; }
 .vehicleBottom button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--pm-line); background: var(--pm-tint); display: grid; place-items: center; color: var(--pm-green); transition: background 200ms; }
 .vehicleBottom > a { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--pm-line); background: var(--pm-tint); display: grid; place-items: center; color: var(--pm-green); transition: background 200ms; }
 .vehicleBottom > a:hover { background: var(--pm-lime); color: var(--pm-accent-text); }

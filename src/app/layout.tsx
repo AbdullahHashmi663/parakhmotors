@@ -14,6 +14,7 @@ import { cacheTag } from 'next/cache';
 import { dataStore } from '@/backend/repositories/data-store';
 import { defaultThemes } from '@/lib/themes';
 import { createThemeTokens } from '@/lib/theme-tokens';
+import { seoImageUrl, seoImageSize } from '@/lib/seo-image';
 
 const geist = localFont({ src: '../../public/fonts/geist-latin.woff2', variable: '--font-geist', display: 'swap', weight: '100 900' });
 
@@ -22,8 +23,8 @@ export const metadata: Metadata = {
   title: { default: 'Parakh Motors | A better drive starts with trust.', template: '%s | Parakh Motors' },
   description: 'Buy, sell and inspect cars with confidence. Parakh Motors offers carefully selected cars, independent vehicle inspections and personal buying and selling support in Lahore, Pakistan.',
   icons: { icon: '/brand/mark.svg?v=inspection-logo', apple: '/brand/apple-touch-icon.png?v=inspection-logo' },
-  openGraph: { title: 'Parakh Motors | A better drive starts with trust.', description: 'Your next chapter, driven with confidence. Car inspections, buying, selling and sourcing in Pakistan.', images: [{ url: '/images/parakh-journey.webp', width: 1536, height: 1024, alt: 'Parakh Motors — a journey through the mountains of Pakistan' }], type: 'website', locale: 'en_PK', siteName: 'Parakh Motors' },
-  twitter: { card: 'summary_large_image', title: 'Parakh Motors | A better drive starts with trust.', description: 'Buy, sell and inspect cars with confidence in Lahore, Pakistan.', images: ['/images/parakh-journey.webp'] },
+  openGraph: { title: 'Parakh Motors | A better drive starts with trust.', description: 'Your next chapter, driven with confidence. Car inspections, buying, selling and sourcing in Pakistan.', images: [{ url: seoImageUrl, ...seoImageSize, alt: 'Parakh Motors — Inspect, Buy, Sell' }], type: 'website', locale: 'en_PK', siteName: 'Parakh Motors' },
+  twitter: { card: 'summary_large_image', title: 'Parakh Motors | A better drive starts with trust.', description: 'Buy, sell and inspect cars with confidence in Lahore, Pakistan.', images: [seoImageUrl] },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
 };
 
@@ -63,8 +64,8 @@ ${themeTokensCss}
     '@type': 'AutoDealer',
     name: settings.dealershipName,
     url: process.env.NEXT_PUBLIC_SITE_URL || 'https://parakhmotors.com',
-    logo: new URL('/brand/mark.svg', process.env.NEXT_PUBLIC_SITE_URL || 'https://parakhmotors.com').toString(),
-    image: new URL('/images/parakh-journey.webp', process.env.NEXT_PUBLIC_SITE_URL || 'https://parakhmotors.com').toString(),
+    logo: new URL('/brand/parakh-logo.svg', process.env.NEXT_PUBLIC_SITE_URL || 'https://parakhmotors.com').toString(),
+    image: new URL(seoImageUrl, process.env.NEXT_PUBLIC_SITE_URL || 'https://parakhmotors.com').toString(),
     description: settings.tagline,
     telephone: settings.phone,
     email: settings.email,

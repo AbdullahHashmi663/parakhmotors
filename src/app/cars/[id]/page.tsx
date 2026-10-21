@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { getPublicVehicle } from '@/lib/public-inventory';
 import { formatMileage, formatPKR } from '@/lib/utils';
 import { VehicleEnquiryForm } from '@/components/VehicleEnquiryForm';
+import { seoImageUrl, seoImageSize } from '@/lib/seo-image';
 import styles from './page.module.css';
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const displayName = vehicleDisplayName(vehicle);
   const displayLocation = titleCaseVehicleText(vehicle.location);
   const description = `${vehicle.year} ${displayName} for sale in ${displayLocation}, Pakistan. ${formatMileage(vehicle.mileage)} · ${titleCaseVehicleText(vehicle.transmission)} · ${titleCaseVehicleText(vehicle.fuelType)}. Enquire with Parakh Motors.`;
-  const image = new URL(vehicle.images[0] || '/images/parakh-journey.webp', siteUrl).toString();
+  const image = new URL(`${seoImageUrl}&vehicle=${encodeURIComponent(vehicle.id)}`, siteUrl).toString();
   const canonical = `/cars/${encodeURIComponent(vehicle.id)}`;
   return {
     title: `${vehicle.year} ${displayName} for Sale in ${displayLocation}`,
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: `${vehicle.year} ${displayName} | Parakh Motors`,
       description,
       url: canonical,
-      images: [{ url: image, alt: `${vehicle.year} ${displayName}` }],
+      images: [{ url: image, ...seoImageSize, alt: `${vehicle.year} ${displayName} — Parakh Motors` }],
     },
     twitter: { card: 'summary_large_image', title: `${vehicle.year} ${displayName} | Parakh Motors`, description, images: [image] },
   };

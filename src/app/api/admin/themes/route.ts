@@ -17,7 +17,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const body = await readJsonObject(request);
     if (body.action === 'set_active') {
       const updated = await dataStore.setActiveTheme(resourceId(textField(body, 'themeId', { max: 120 })));
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const id = resourceId(request.nextUrl.searchParams.get('id') || '');
     const themes = await dataStore.getThemes();
     if (!themes.some(theme => theme.id === id)) throw ApiError.notFound('Theme not found');

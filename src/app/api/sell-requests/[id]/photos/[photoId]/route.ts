@@ -6,7 +6,7 @@ import { resourceId } from '@/backend/utils/validation';
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string; photoId: string }> }) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const { id, photoId } = await context.params;
     resourceId(id);
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photoId)) throw ApiError.badRequest('Invalid photo ID');

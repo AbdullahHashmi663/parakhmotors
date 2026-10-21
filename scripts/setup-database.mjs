@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import pg from 'pg';
 import { databaseConfig } from './database-config.mjs';
+import { hashAdminPassword } from '../src/backend/passwords.ts';
 
 const pool = new pg.Pool(databaseConfig());
 const source = JSON.parse(readFileSync('src/data/db.json', 'utf8'));
@@ -49,6 +50,13 @@ try {
   // Add screenshot-inspired built-in palettes to existing databases as well as fresh installs.
   for (const theme of source.themes.filter(theme => theme.id.startsWith('palette-'))) {
     await insert(client, 'themes', theme);
+  }
+  await client.query(readFileSync('supabase/migrations/20261021_admin_accounts.sql', 'utf8'));
+  if (process.env.ADMIN_PASSWORD && process.env.ADMIN_RECOVERY_EMAIL) {
+    await insert(client, 'admin_accounts', {
+      id: 'main_admin', username: process.env.ADMIN_USERNAME || 'parakhmotors777',
+      password_hash: await hashAdminPassword(process.env.ADMIN_PASSWORD), recovery_email: process.env.ADMIN_RECOVERY_EMAIL,
+    });
   }
   await client.query('COMMIT');
   const counts = {};

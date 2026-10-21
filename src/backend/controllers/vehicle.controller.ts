@@ -33,7 +33,7 @@ export class VehicleController {
 
   static async handleCreateVehicle(request: NextRequest) {
     try {
-      requireAdmin(request);
+      await requireAdmin(request);
       const submission = request.headers.get('content-type')?.toLowerCase().startsWith('multipart/form-data')
         ? await readVehicleSubmission(request)
         : { details: await readJsonObject(request), photos: [] };
@@ -44,7 +44,7 @@ export class VehicleController {
 
   static async handleUpdateVehicle(id: string, request: NextRequest) {
     try {
-      requireAdmin(request);
+      await requireAdmin(request);
       const submission = request.headers.get('content-type')?.toLowerCase().startsWith('multipart/form-data')
         ? await readVehicleSubmission(request)
         : { details: await readJsonObject(request), photos: [] };
@@ -55,7 +55,7 @@ export class VehicleController {
 
   static async handleDeleteVehicle(id: string, request: NextRequest) {
     try {
-      requireAdmin(request);
+      await requireAdmin(request);
       await VehicleService.deleteVehicle(id);
       return successResponse({ deletedId: id }, { message: 'Vehicle deleted successfully' });
     } catch (error) { return handleApiError(error); }

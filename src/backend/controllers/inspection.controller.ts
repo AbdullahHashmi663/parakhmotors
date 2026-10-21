@@ -8,7 +8,7 @@ import { enumField, inspectionStatuses, readJsonObject, textField } from '../uti
 export class InspectionController {
   static async handleGetInspections(request: NextRequest) {
     try {
-      requireAdmin(request);
+      await requireAdmin(request);
       const rawStatus = request.nextUrl.searchParams.get('status');
       const status = rawStatus ? enumField(rawStatus, inspectionStatuses, 'inspection status') : undefined;
       const inspections = await InspectionService.getAllInspections(status);
@@ -18,7 +18,7 @@ export class InspectionController {
 
   static async handleGetInspectionById(id: string, request: NextRequest) {
     try {
-      requireAdmin(request);
+      await requireAdmin(request);
       return successResponse(await InspectionService.getInspectionById(id), { message: 'Inspection retrieved successfully' });
     } catch (error) { return handleApiError(error); }
   }
@@ -32,7 +32,7 @@ export class InspectionController {
 
   static async handleUpdateInspectionStatus(id: string, request: NextRequest) {
     try {
-      requireAdmin(request);
+      await requireAdmin(request);
       const body = await readJsonObject(request);
       const notes = 'notes' in body ? textField(body, 'notes', { optional: true, max: 5000 }) : undefined;
       const updated = await InspectionService.updateStatus(id, body.status, notes);

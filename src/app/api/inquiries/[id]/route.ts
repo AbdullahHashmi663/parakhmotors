@@ -19,7 +19,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const { id } = await context.params;
     if (!id) throw ApiError.badRequest('Inquiry ID is required');
     const deleted = await dataStore.deleteInquiry(resourceId(id));

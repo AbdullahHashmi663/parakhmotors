@@ -10,7 +10,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const { id } = await context.params;
     const body = await readJsonObject(request);
     const updated = await dataStore.updateSellRequestStatus(resourceId(id), enumField(body.status, sellStatuses, 'sell request status'));
@@ -26,7 +26,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const { id } = await context.params;
     const deleted = await dataStore.deleteSellRequest(resourceId(id));
     if (!deleted) throw ApiError.notFound('Sell request not found');

@@ -46,7 +46,7 @@ try {
   check(() => assert.deepEqual(received.photos.map((photo) => [photo.width, photo.height]), [[40, 64], [64, 40], [64, 40]]));
   check(() => assert.ok(received.photos.every((photo) => photo.url === `/api/sell-requests/${received.id}/photos/${photo.id}` && photo.size > 0 && photo.size <= 512 * 1024)));
   await request(received.photos[0].url, 401);
-  const login = await request('/api/admin/session', 200, { method: 'POST', body: { password: process.env.ADMIN_PASSWORD } });
+  const login = await request('/api/admin/session', 200, { method: 'POST', body: { username: process.env.ADMIN_USERNAME || 'parakhmotors777', password: process.env.TEST_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD } });
   cookie = login.headers.get('set-cookie').split(';')[0];
   const all = (await (await request('/api/admin/data', 200, { admin: true })).json()).data;
   check(() => assert.deepEqual(all.sellRequests.find((item) => item.id === received.id).photos, received.photos));

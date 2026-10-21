@@ -9,7 +9,7 @@ import { readSellRequestSubmission } from '../utils/sell-photo-upload';
 export class RequestController {
   static async handleGetSellRequests(request: NextRequest) {
     try {
-      requireAdmin(request);
+      await requireAdmin(request);
       const requests = await RequestService.getAllSellRequests();
       return successResponse(requests, { message: 'Sell car requests retrieved successfully', meta: { total: requests.length } });
     } catch (error) { return handleApiError(error); }
@@ -25,7 +25,7 @@ export class RequestController {
 
   static async handleGetFindRequests(request: NextRequest) {
     try {
-      requireAdmin(request);
+      await requireAdmin(request);
       const requests = await RequestService.getAllFindRequests();
       return successResponse(requests, { message: 'Find car requests retrieved successfully', meta: { total: requests.length } });
     } catch (error) { return handleApiError(error); }

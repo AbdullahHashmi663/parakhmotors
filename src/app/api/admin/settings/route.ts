@@ -16,7 +16,7 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const body = await readJsonObject(request, 512 * 1024);
     const updates: Partial<DealershipSettings> = {};
     const keys = ['dealershipName', 'tagline', 'phone', 'whatsapp', 'email', 'address', 'workingHours', 'announcement', 'currency', 'heroHeadline', 'heroSubheadline'] as const;

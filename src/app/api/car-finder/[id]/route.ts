@@ -10,7 +10,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const { id } = await context.params;
     const body = await readJsonObject(request);
     const updated = await dataStore.updateFindRequestStatus(resourceId(id), enumField(body.status, findStatuses, 'car finder request status'));
@@ -26,7 +26,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const { id } = await context.params;
     const deleted = await dataStore.deleteFindRequest(resourceId(id));
     if (!deleted) throw ApiError.notFound('Find request not found');

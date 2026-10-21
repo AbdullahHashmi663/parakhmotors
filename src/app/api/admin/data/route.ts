@@ -8,7 +8,7 @@ import { readJsonObject } from '@/backend/utils/validation';
 
 export async function GET(request: NextRequest) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const allData = await dataStore.getAllData();
     const health = await getDatabaseHealth();
     return NextResponse.json({ success: true, data: allData, status: { has_db_url: health.configured, db_connected: health.connected, source: health.source } }, { headers: { 'Cache-Control': 'no-store' } });
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    requireAdmin(request);
+    await requireAdmin(request);
     const body = await readJsonObject(request);
     if (body.action !== 'reset_defaults') throw ApiError.badRequest('Invalid action parameter');
     const resetData = await dataStore.resetToDefaults();

@@ -13,9 +13,11 @@
     "db:migrate:photos": "node scripts/migrate-sell-photos.mjs",
     "db:migrate:optional-email": "node scripts/migrate-optional-customer-email.mjs",
     "db:migrate:vehicle-discounts": "node scripts/migrate-vehicle-discounts.mjs",
+    "db:migrate:admin": "node scripts/migrate-admin-accounts.mjs",
     "test:content": "node scripts/verify-website-content.mjs",
     "test:sell-photos": "node scripts/verify-sell-photos.mjs",
-    "test:integration": "node scripts/verify-integration.mjs"
+    "test:integration": "node scripts/verify-integration.mjs",
+    "test:admin": "node scripts/verify-admin-auth.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

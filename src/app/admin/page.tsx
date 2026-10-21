@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { BrandLogo } from '@/components/BrandLogo';
+import { AdminSignIn } from '@/components/AdminSignIn';
 import { MotionScene } from '@/components/MotionScene';
 import { AdminWebsiteEditor } from '@/components/AdminWebsiteEditor';
 import { SellRequestPhotos } from '@/components/SellRequestPhotos';
@@ -24,7 +25,6 @@ import {
   Trash2,
   Edit3,
   Check,
-  Lock,
   ArrowLeft,
   ExternalLink,
   Sparkles,
@@ -82,9 +82,7 @@ function AdminExperience() {
 
   // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   // Tab State
@@ -197,7 +195,6 @@ function AdminExperience() {
       setFindRequests([]);
       setDealershipSettings(null);
       setDbStatus(null);
-      setPasswordInput('');
       setAuthError('Your session has expired. Please sign in again to continue.');
     };
     window.addEventListener(ADMIN_SESSION_EXPIRED, expireSession);
@@ -334,36 +331,13 @@ function AdminExperience() {
     }
   }, [isAuthenticated, loadAllData]);
 
-  // Handle Login
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!passwordInput.trim()) return;
-
-    try {
-      setIsAuthenticating(true);
-      setAuthError('');
-      const res = await api.admin.login(passwordInput);
-      if (res.success) {
-        setPasswordInput('');
-        setIsAuthenticated(true);
-        showNotification('Authenticated as Dealership Administrator');
-      } else {
-        setAuthError('That password was not recognised. Please try again.');
-      }
-    } catch (error) {
-      setAuthError(error instanceof Error ? error.message : 'Unable to sign in. Please try again.');
-    } finally {
-      setIsAuthenticating(false);
-    }
-  };
-
   // Handle Logout
   const handleLogout = async () => {
     if (websiteDirty && !confirm('You have unpublished website changes. Discard them and sign out?')) return;
     try {
       assertSuccess(await api.admin.logout());
       setIsAuthenticated(false);
-      setPasswordInput('');
+      setAuthError('');
     } catch (error) {
       showNotification(error instanceof Error ? error.message : 'Unable to sign out.', 'error');
     }
@@ -697,7 +671,7 @@ function AdminExperience() {
   if (!isAuthenticated) return (
     <div ref={adminRoot} className={styles.login}>
       <div className={styles.loginStory}><Link href="/" aria-label="Parakh Motors home"><BrandLogo inverse /></Link><div><span className={styles.eyebrow}>THE PARAKH MOTORS STUDIO</span><h1>Great service.<br />Starts here.</h1><p>A considered space to manage your cars, connect with customers, and keep your business moving.</p></div><div className={styles.loginPromise}><Shield size={20} /><span>Your showroom. Your control.</span></div></div>
-      <main className={styles.loginMain}><Link href="/" className={styles.backLink}><ArrowLeft size={17} />Back to the website</Link><div className={styles.loginForm}><div className={styles.loginIcon}><Lock size={25} /></div><span className={styles.eyebrow}>ADMINISTRATOR ACCESS</span><h2>Welcome back.</h2><p>Sign in to manage the Parakh Motors experience.</p><form onSubmit={handleLogin}><Field label="Administrator password"><input className={styles.control} type="password" autoComplete="current-password" required placeholder="Enter your password" value={passwordInput} onChange={(e) => { setPasswordInput(e.target.value); setAuthError(''); }} aria-invalid={Boolean(authError)} aria-describedby={authError ? 'admin-auth-error' : undefined} autoFocus /></Field>{authError && <p id="admin-auth-error" className={styles.formError} role="alert"><AlertCircle size={17} />{authError}</p>}<button data-motion-press className={styles.primaryButton} type="submit" disabled={isAuthenticating}>{isAuthenticating ? <><RefreshCw className={styles.spin} size={17} />Signing in…</> : <>Enter the studio<ArrowUpRight size={19} /></>}</button></form><div className={styles.loginFine}><Shield size={15} /><span>Secure access for the dealership team.</span></div></div></main>
+      <main className={styles.loginMain}><Link href="/" className={styles.backLink}><ArrowLeft size={17} />Back to the website</Link><AdminSignIn notice={authError} onAuthenticated={() => { setAuthError(''); setIsAuthenticated(true); showNotification('Authenticated as Dealership Administrator'); }} /></main>
     </div>
   );
 

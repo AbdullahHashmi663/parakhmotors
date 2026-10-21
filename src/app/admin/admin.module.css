@@ -195,6 +195,12 @@ textarea.control { resize: vertical; }
 .loginForm > p { color: var(--pm-muted); font-size: calc(13px * var(--pm-text-scale)); margin-block: 14px 30px; }
 .loginForm form { display: grid; gap: 23px; }
 .loginForm .primaryButton { width: 100%; }
+.authMethods { display: flex; gap: 8px; margin-bottom: 24px; padding: 5px; border: 1px solid var(--pm-line); border-radius: 8px; }
+.authMethods button { flex: 1; min-height: 42px; border: 0; border-radius: 5px; background: transparent; color: var(--pm-muted); font-size: calc(12px * var(--pm-text-scale)); }
+.authMethods button[aria-pressed='true'] { background: var(--pm-green); color: var(--pm-button-text); }
+.authLink { display: block; margin: 18px auto 0; padding: 7px; border: 0; background: none; color: var(--pm-green); text-decoration: underline; text-underline-offset: 4px; font-size: calc(12px * var(--pm-text-scale)); }
+.authLink:disabled { opacity: .6; cursor: default; }
+.authMessage { color: var(--pm-muted); font-size: calc(12px * var(--pm-text-scale)); line-height: 1.7; }
 .loginFine { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--pm-muted); font-size: calc(10px * var(--pm-text-scale)); margin-top: 25px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pulse { to { opacity: .3; } }

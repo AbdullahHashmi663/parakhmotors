@@ -8,7 +8,11 @@ runtime fallback.
 Server configuration lives in the ignored `.env.local` file:
 
 - `DATABASE_URL`: Supabase Session pooler URI, including the database password.
-- `ADMIN_PASSWORD`: dealership administrator password.
+- `ADMIN_PASSWORD`: initial administrator password for database bootstrap; later password changes are stored as scrypt hashes in the database.
+- `ADMIN_USERNAME`: initial administrator username (defaults to `parakhmotors777`).
+- `ADMIN_RECOVERY_EMAIL`: administrator email for one-time login and password-reset codes.
+- `RESEND_API_KEY`: server-only Resend API key.
+- `ADMIN_FROM_EMAIL`: sender address on a domain verified in Resend.
 - `ADMIN_SESSION_SECRET`: at least 32 characters; signs expiring administrator sessions.
 - `DATABASE_SSL_CA_PATH`: optional custom CA file. The included official Supabase
   certificate is used by default.
@@ -17,7 +21,8 @@ Server configuration lives in the ignored `.env.local` file:
 Keep these server-only variables out of `NEXT_PUBLIC_*` variables and source control.
 Use the deployment platform's secret settings for a hosted instance. Restart the
 server after changing credentials. Rotating the administrator password or session
-secret invalidates existing sessions.
+secret invalidates existing sessions. Resetting the database-backed password also
+invalidates all existing admin sessions and outstanding email codes.
 
 The certificate in `supabase/certs/prod-ca-2021.crt` came from
 [Supabase's official HTTPS download](https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt),
@@ -36,7 +41,28 @@ The migration inserts missing records, preserves existing IDs, records completio
 and does not repeat seeding on subsequent runs. The six known demonstration
 customer records are excluded. Existing non-demo local submissions are preserved.
 
-Open `/admin` to sign in. Customer lists and every management mutation require a
+Run `npm run db:migrate:admin` for an existing database to add private account,
+one-time code and rate-limit tables. It seeds the initial username, a salted scrypt
+password hash and the recovery email only when the account is missing. Re-running
+the migration preserves the password and recovery address already stored.
+
+Open `/admin` to sign in with the administrator username and password, or request
+an eight-digit code at the account's registered email. The Forgot password option
+requires a separate password-reset code before accepting a new password of at
+least 12 characters. Codes expire after 10 minutes, work once, and permit at most
+five verification attempts. Login codes cannot reset passwords. Code requests
+have a one-minute cooldown and database-backed request limits that work across
+server instances. Anonymous and authenticated Supabase clients cannot read
+credentials, challenge hashes or authentication limits.
+
+Run `npm run test:admin` for account and code security checks. This creates a
+temporary account, mocks delivery (no emails are sent), checks expiry, replay,
+failed-code limits, simultaneous code use, password-reset session revocation and
+database-role privacy, then removes its test records. Other integration scripts
+use `ADMIN_USERNAME` and the bootstrap `ADMIN_PASSWORD`; set `TEST_ADMIN_PASSWORD`
+to the current password if it has since been reset in the application.
+
+Customer lists and every management mutation require a
 signed, HttpOnly, eight-hour session. Customer data is also inaccessible to
 anonymous Supabase roles. Public forms submit through validated server routes.
 Theme changes update the active theme and settings together in a transaction.

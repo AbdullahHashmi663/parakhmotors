@@ -224,11 +224,20 @@ export const api = {
 
   admin: {
     checkSession: () => requestJson<{ authenticated: boolean }>('/api/admin/session'),
-    login: (password: string) =>
+    login: (username: string, password: string) =>
       requestJson<{ success: boolean; message: string }>('/api/admin/session', {
         method: 'POST',
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       }),
+    requestCode: (username: string, purpose: 'login' | 'password_reset') => requestJson<{ success: boolean; challengeId: string; message: string }>('/api/admin/session', {
+      method: 'POST', body: JSON.stringify({ action: 'request_code', username, purpose }),
+    }),
+    verifyCode: (username: string, challengeId: string, code: string) => requestJson<{ success: boolean }>('/api/admin/session', {
+      method: 'POST', body: JSON.stringify({ action: 'verify_code', username, challengeId, code }),
+    }),
+    resetPassword: (username: string, challengeId: string, code: string, newPassword: string, confirmPassword: string) => requestJson<{ success: boolean; message: string }>('/api/admin/session', {
+      method: 'POST', body: JSON.stringify({ action: 'reset_password', username, challengeId, code, newPassword, confirmPassword }),
+    }),
     logout: () => requestJson<{ success: boolean }>('/api/admin/session', { method: 'DELETE' }),
     getAllData: () => requestJson<AdminDataResponse>('/api/admin/data'),
     resetDefaults: () =>

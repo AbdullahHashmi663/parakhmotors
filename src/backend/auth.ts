@@ -2,36 +2,30 @@ import 'server-only';
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 import { ApiError } from './utils/api-error';
+import { getDatabasePool } from './database';
+import type { AdminAccount } from './admin-accounts';
 
 export const ADMIN_COOKIE = 'pm_admin_session';
 export const SESSION_SECONDS = 8 * 60 * 60;
 
 function sessionKey(): string | null {
   const secret = process.env.ADMIN_SESSION_SECRET;
-  const password = process.env.ADMIN_PASSWORD;
-  if (!secret || secret.length < 32 || !password) return null;
-  return createHmac('sha256', secret).update(password).digest('hex');
+  if (!secret || secret.length < 32) return null;
+  return secret;
 }
 
 export function assertAdminConfigured(): void {
   if (!sessionKey()) throw new ApiError('Administrative access is not configured', 503, 'ADMIN_UNAVAILABLE');
 }
 
-export function verifyAdminPassword(password: string): boolean {
+export function createAdminSession(account: Pick<AdminAccount, 'id' | 'credential_version'>): string {
   assertAdminConfigured();
-  const expected = createHash('sha256').update(process.env.ADMIN_PASSWORD!).digest();
-  const supplied = createHash('sha256').update(password).digest();
-  return timingSafeEqual(expected, supplied);
-}
-
-export function createAdminSession(): string {
-  assertAdminConfigured();
-  const payload = Buffer.from(JSON.stringify({ expires: Math.floor(Date.now() / 1000) + SESSION_SECONDS, nonce: randomBytes(24).toString('hex') })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({ accountId: account.id, version: account.credential_version, expires: Math.floor(Date.now() / 1000) + SESSION_SECONDS, nonce: randomBytes(24).toString('hex') })).toString('base64url');
   const signature = createHmac('sha256', sessionKey()!).update(payload).digest('base64url');
   return `${payload}.${signature}`;
 }
 
-export function isAdminAuthenticated(request: NextRequest): boolean {
+export async function isAdminAuthenticated(request: NextRequest): Promise<boolean> {
   const key = sessionKey();
   const token = request.cookies.get(ADMIN_COOKIE)?.value;
   if (!key || !token || token.length > 512) return false;
@@ -44,7 +38,10 @@ export function isAdminAuthenticated(request: NextRequest): boolean {
     if (expected.length !== supplied.length || !timingSafeEqual(expected, supplied)) return false;
     const data: unknown = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
     if (!data || typeof data !== 'object' || !('expires' in data) || !('nonce' in data)) return false;
-    return typeof data.expires === 'number' && data.expires > Date.now() / 1000 && typeof data.nonce === 'string';
+    if (!(typeof data.expires === 'number' && data.expires > Date.now() / 1000 && typeof data.nonce === 'string')) return false;
+    if (!('accountId' in data) || typeof data.accountId !== 'string' || !('version' in data) || typeof data.version !== 'number') return false;
+    const account = await getDatabasePool().query('SELECT id FROM public.admin_accounts WHERE id = $1 AND credential_version = $2', [data.accountId, data.version]);
+    return account.rowCount === 1;
   } catch {
     return false;
   }
@@ -63,8 +60,8 @@ export function assertSameOrigin(request: NextRequest): void {
   }
 }
 
-export function requireAdmin(request: NextRequest): void {
-  if (!isAdminAuthenticated(request)) throw ApiError.unauthorized('Sign in to the showroom administration');
+export async function requireAdmin(request: NextRequest): Promise<void> {
+  if (!await isAdminAuthenticated(request)) throw ApiError.unauthorized('Sign in to the showroom administration');
   if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) assertSameOrigin(request);
 }
 

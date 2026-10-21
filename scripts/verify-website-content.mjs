@@ -30,7 +30,7 @@ async function create(route, body, table) {
 }
 try {
   await request('/api/admin/settings', 401, 'PUT', { websiteContent: {} });
-  const login = await request('/api/admin/session', 200, 'POST', { password: process.env.ADMIN_PASSWORD });
+  const login = await request('/api/admin/session', 200, 'POST', { username: process.env.ADMIN_USERNAME || 'parakhmotors777', password: process.env.TEST_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD });
   cookie = login.response.headers.get('set-cookie').split(';')[0];
   original = (await request('/api/admin/settings', 200)).result.data;
   rawOriginal = (await pool.query("SELECT website_content FROM public.dealership_settings WHERE id = 'main_settings'")).rows[0].website_content;

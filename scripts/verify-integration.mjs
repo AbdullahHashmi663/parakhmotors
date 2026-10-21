@@ -61,17 +61,18 @@ try {
   await expectStatus('/api/vehicles', 401, 'POST', {});
   await expectStatus('/api/admin/settings', 401, 'PUT', {});
   await expectStatus('/api/admin/themes', 401, 'POST', {});
-  const invalid = await expectStatus('/api/admin/session', 401, 'POST', { password: 'not-the-password' });
+  const invalid = await expectStatus('/api/admin/session', 401, 'POST', { username: process.env.ADMIN_USERNAME || 'parakhmotors777', password: 'not-the-password' });
   assert.equal(invalid.data.success, false);
-  const login = await expectStatus('/api/admin/session', 200, 'POST', { password: process.env.ADMIN_PASSWORD });
+  const login = await expectStatus('/api/admin/session', 200, 'POST', { username: process.env.ADMIN_USERNAME || 'parakhmotors777', password: process.env.TEST_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD });
   const setCookie = login.response.headers.get('set-cookie');
   assert.match(setCookie, /HttpOnly/i);
   assert.match(setCookie, /SameSite=Strict/i);
   cookie = setCookie.split(';')[0];
   await expectStatus('/api/admin/data', 200, 'GET', undefined, { admin: true });
   await expectStatus('/api/admin/settings', 403, 'PUT', { dealershipName: marker }, { admin: true, headers: { Origin: 'https://different-origin.invalid' } });
-  const expiredPayload = Buffer.from(JSON.stringify({ expires: Math.floor(Date.now() / 1000) - 1, nonce: 'test' })).toString('base64url');
-  const key = createHmac('sha256', process.env.ADMIN_SESSION_SECRET).update(process.env.ADMIN_PASSWORD).digest('hex');
+  const account = (await pool.query("SELECT id, credential_version FROM public.admin_accounts WHERE id = 'main_admin'")).rows[0];
+  const expiredPayload = Buffer.from(JSON.stringify({ accountId: account.id, version: account.credential_version, expires: Math.floor(Date.now() / 1000) - 1, nonce: 'test' })).toString('base64url');
+  const key = process.env.ADMIN_SESSION_SECRET;
   const expired = expiredPayload + '.' + createHmac('sha256', key).update(expiredPayload).digest('base64url');
   await expectStatus('/api/admin/data', 401, 'GET', undefined, { headers: { Cookie: 'pm_admin_session=' + expired } });
 

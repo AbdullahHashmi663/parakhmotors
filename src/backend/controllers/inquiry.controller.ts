@@ -8,7 +8,7 @@ import { enumField, inquiryStatuses, readJsonObject } from '../utils/validation'
 export class InquiryController {
   static async handleGetInquiries(request: NextRequest) {
     try {
-      requireAdmin(request);
+      await requireAdmin(request);
       const rawStatus = request.nextUrl.searchParams.get('status');
       const status = rawStatus ? enumField(rawStatus, inquiryStatuses, 'inquiry status') : undefined;
       const inquiries = await InquiryService.getAllInquiries(status);
@@ -25,7 +25,7 @@ export class InquiryController {
 
   static async handleUpdateStatus(id: string, request: NextRequest) {
     try {
-      requireAdmin(request);
+      await requireAdmin(request);
       const body = await readJsonObject(request);
       const updated = await InquiryService.updateStatus(id, body.status);
       return successResponse(updated, { message: 'Inquiry status updated successfully' });

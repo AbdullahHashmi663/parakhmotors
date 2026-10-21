@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://parakhmotors.com'),
   title: { default: 'Parakh Motors | A better drive starts with trust.', template: '%s | Parakh Motors' },
   description: 'Buy, sell and inspect cars with confidence. Parakh Motors offers carefully selected cars, independent vehicle inspections and personal buying and selling support in Lahore, Pakistan.',
-  icons: { icon: '/brand/mark.svg?v=car-crest', apple: '/brand/apple-touch-icon.png?v=car-crest' },
+  icons: { icon: '/brand/mark.svg?v=inspection-logo', apple: '/brand/apple-touch-icon.png?v=inspection-logo' },
   openGraph: { title: 'Parakh Motors | A better drive starts with trust.', description: 'Your next chapter, driven with confidence. Car inspections, buying, selling and sourcing in Pakistan.', images: [{ url: '/images/parakh-journey.webp', width: 1536, height: 1024, alt: 'Parakh Motors — a journey through the mountains of Pakistan' }], type: 'website', locale: 'en_PK', siteName: 'Parakh Motors' },
   twitter: { card: 'summary_large_image', title: 'Parakh Motors | A better drive starts with trust.', description: 'Buy, sell and inspect cars with confidence in Lahore, Pakistan.', images: ['/images/parakh-journey.webp'] },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },

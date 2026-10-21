@@ -253,4 +253,18 @@ export const defaultThemes: Theme[] = [
     glow_color: 'rgba(230, 116, 30, 0.16)',
     is_active: false,
   },
+  {
+    id: 'palette-parakh-beige-maroon',
+    name: 'Parakh Beige & Maroon',
+    category: 'Signature & Heritage',
+    description: 'Parakh Motors signage palette with light beige (#EADCC8) and maroon (#6B1F2A) for a warm, refined showroom.',
+    background: '#EADCC8',
+    foreground: '#6B1F2A',
+    card_bg: '#F5EDE1',
+    border_color: '#C9B59B',
+    primary: '#6B1F2A',
+    accent: '#EADCC8',
+    glow_color: 'rgba(107, 31, 42, 0.16)',
+    is_active: false,
+  },
 ];

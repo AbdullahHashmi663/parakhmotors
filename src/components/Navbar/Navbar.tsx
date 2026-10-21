@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { BrandLogo } from '../BrandLogo';
 import styles from './Navbar.module.css';
 
 interface NavbarProps {
@@ -14,18 +14,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onBookInspectionClick }) => {
     <header className={styles.navbar}>
       <div className={`container ${styles.inner}`}>
         <Link href="/" className={styles.brand}>
-          <Image
-            src="/images/parakhmotors-logo.jpeg"
-            alt="Parakh Motors Logo"
-            width={120}
-            height={44}
-            className={styles.logoImg}
-            priority
-          />
-          <div className={styles.brandText}>
-            <span className={styles.brandName}>Parakh Motors</span>
-            <span className={styles.brandTagline}>Trust Delivered</span>
-          </div>
+          <BrandLogo />
         </Link>
 
         <nav className={styles.navLinks}>

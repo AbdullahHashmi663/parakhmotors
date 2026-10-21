@@ -7,11 +7,10 @@ type BrandLogoProps = {
   className?: string;
 };
 
-/** A sculpted car crest with an original vector wordmark; no font dependency. */
+/** Supplied inspection symbol and wordmark, colored by the selected theme. */
 export function BrandLogo({ compact = false, inverse = false, className = '' }: BrandLogoProps) {
-  const badge = inverse ? 'var(--pm-lime)' : 'var(--pm-button-bg)';
-  const car = inverse ? 'var(--pm-accent-text)' : 'var(--pm-button-text)';
   const lettering = inverse ? 'var(--pm-inverse-text)' : 'var(--pm-green)';
+  const secondary = inverse ? 'var(--pm-inverse-accent)' : 'var(--pm-muted)';
   return (
     <svg
       className={`${styles.logo} ${compact ? styles.compact : ''} ${className}`}
@@ -23,24 +22,12 @@ export function BrandLogo({ compact = false, inverse = false, className = '' }: 
       focusable="false"
     >
       <g className={styles.mark}>
-        <path d={brandLogo.crest} fill={badge} />
-        <path className={styles.crestLine} d={brandLogo.inset} stroke={car} strokeWidth="0.8" />
-        <g stroke={car} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path className={styles.carLine} d={brandLogo.roof} />
-          <path d={brandLogo.body} />
-          <path d={brandLogo.windshield} strokeWidth="1.25" />
-          <path d={brandLogo.details} strokeWidth="1.5" />
-        </g>
-        {brandLogo.lights.map((path) => <path key={path} d={path} fill={car} />)}
-        <path d={brandLogo.grille} stroke={car} strokeWidth="1.1" />
-        <path d={brandLogo.horizon} stroke={car} strokeWidth="1" />
-        <path d={brandLogo.diamond} fill={car} />
+        <path d={brandLogo.mark} fill={lettering} fillRule="evenodd" />
       </g>
       {!compact && (
-        <g transform="translate(-6 0)" stroke={lettering} strokeLinecap="square" strokeLinejoin="miter">
-          {brandLogo.wordmark.map((path) => <path key={path} d={path} strokeWidth="2.3" />)}
-          {brandLogo.descriptor.map((path) => <path key={path} d={path} strokeWidth="1.2" />)}
-          <path d={brandLogo.rules} strokeWidth="0.7" />
+        <g fillRule="evenodd">
+          <path d={brandLogo.wordmark} fill={lettering} />
+          <path d={brandLogo.accent} fill={secondary} />
         </g>
       )}
     </svg>
